@@ -1,0 +1,7 @@
+﻿node_modules/
+.idea/
+*.log
+_*.png
+_*.js
+_*.mjs
+_*.ps1
