@@ -32,6 +32,7 @@ import {exampleFor, recognition, stepExplanation} from './curriculum.js';
 
 const $ = id => document.getElementById(id),
   storeKey = 'rubiks-lab-v2',
+  playbackRates = [0.25, 0.5, 0.75, 1, 1.25, 1.5],
   clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 let session = new CubeSession(3),
   mode = 'simple',
@@ -39,6 +40,7 @@ let session = new CubeSession(3),
   selected = null,
   selectedId = null,
   lastAction = '尚未转动',
+  formulaRate = 1,
   active = null,
   animating = false,
   gesture = null,
@@ -61,6 +63,7 @@ try {
   if (savedRaw) {
     const data = JSON.parse(savedRaw);
     session = CubeSession.restore(data.session);
+    if (playbackRates.includes(data.formulaRate)) formulaRate = data.formulaRate;
     if (typeof data.lastAction === 'string' && data.lastAction.length <= 250) lastAction = data.lastAction;
     mode = data.mode === 'advanced' ? 'advanced' : 'simple';
     if (mode === 'simple' && session.state.size > 3) mode = 'advanced';
@@ -97,6 +100,57 @@ if (flatSaved)
   }
 const state = () => historyJob?.working || session.state;
 
+let immersive = false, immersiveScroll;
+const immersiveControls = [$('formulaPlayer'), $('undoBtn').parentElement, $('lastAction'), document.querySelector('.manual-controls')]
+  .map(el => {
+    const marker = document.createComment('immersive control position');
+    el.before(marker);
+    return {el, marker};
+  });
+function placeImmersiveControls() {
+  const rightOnly = immersive && $('immersiveView').value === 'flat';
+  for (const {el,marker} of immersiveControls) {
+    if (rightOnly) $('immersiveConsole').append(el);
+    else marker.after(el);
+  }
+  $('immersiveConsole').hidden = !rightOnly;
+  document.body.dataset.immersiveView = $('immersiveView').value;
+  requestAnimationFrame(() => cube?.resize());
+}
+function showImmersive(on) {
+  if (immersive === on) return;
+  immersive = on;
+  if (on) immersiveScroll = {x: scrollX, y: scrollY};
+  document.body.classList.toggle('immersive', on);
+  $('immersiveBtn').textContent = on ? '退出沉浸' : '沉浸体验';
+  $('immersiveBtn').setAttribute('aria-pressed', String(on));
+  $('immersiveViewLabel').hidden = !on;
+  placeImmersiveControls();
+  if (!on && immersiveScroll) scrollTo(immersiveScroll.x, immersiveScroll.y);
+}
+async function leaveImmersive() {
+  showImmersive(false);
+  if (document.fullscreenElement && document.exitFullscreen) {
+    try { await document.exitFullscreen(); } catch {}
+  }
+}
+$('immersiveBtn').onclick = () => {
+  if (immersive) return leaveImmersive();
+  showImmersive(true);
+  // The CSS layout still fills the viewport when native fullscreen is unavailable.
+  document.documentElement.requestFullscreen?.().catch(() => {});
+};
+$('immersiveView').onchange = placeImmersiveControls;
+document.addEventListener('fullscreenchange', () => {
+  if (!document.fullscreenElement) showImmersive(false);
+});
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape' && immersive && !document.querySelector('dialog[open]')) {
+    e.preventDefault();
+    leaveImmersive();
+  }
+});
+
 function toast(text) {
   $('labToast').textContent = text;
   $('labToast').hidden = false;
@@ -123,6 +177,7 @@ function save() {
     localStorage.setItem(storeKey, JSON.stringify({
       session: (saved?.session || session).serialize(),
       lastAction: saved?.lastAction || lastAction,
+      formulaRate,
       mode: saved?.mode || mode,
       view: saved?.view || view,
       prefs: saved?.prefs || prefs,
@@ -195,7 +250,7 @@ function ui() {
   $('resetBtn').disabled = !!historyJob || !!player;
   $('sizeSelect').disabled = !!historyJob || !!player;
   $('modeSelect').disabled = !!historyJob || !!player;
-  $('selectionInfo').textContent = selectionLabel();
+  $('selectionInfo').textContent = player ? '演示中可拖动三维换视角、拖动二维平移；双指或滚轮缩放。' : selectionLabel();
   $('turnMotion').value = prefs.motion;
   $('sensitivity').value = prefs.sensitivity;
   $('sensitivityValue').textContent = `${prefs.sensitivity.toFixed(1)} 倍`;
@@ -259,7 +314,7 @@ function playerUI() {
   $('formulaPlayer').hidden = false;
   $('playerTitle').textContent = player.name;
   const size = player.size;
-  $('playerContext').textContent = player.restore ? `独立${size===4?'四':'三'}阶示例 · 退出恢复原局，演示不会覆盖你的进度。` : `正在应用到你的${size}阶局面 · 完成的动作已记入历史，不保证复原。`;
+  $('playerContext').textContent = player.restore ? `独立${size===4?'四':'三'}阶示例 · 可边播边拖动换视角，退出恢复原局。` : `正在应用到你的${size}阶局面 · 可拖动换视角，完成动作已记入历史。`;
   $('formulaSteps').replaceChildren(...player.moves.map((m, i) => {
     const s = document.createElement('span');
     s.textContent = player.steps?.[i]?.token || moveName(m, size);
@@ -272,6 +327,8 @@ function playerUI() {
   $('formulaNext').disabled = animating || player.transitioning || player.index >= player.moves.length;
   $('formulaReplay').disabled = !!player.transitioning;
   $('formulaFirst').disabled = !!player.transitioning;
+  $('formulaRate').value = String(formulaRate);
+  $('formulaRate').disabled = !!player.transitioning;
   $('exitDemo').disabled = !!player.transitioning;
   $('formulaApply').disabled = !!player.transitioning;
   $('formulaApply').hidden = !player.restore;
@@ -307,7 +364,7 @@ function duration(speed = 360) {
 }
 let animationResolve = null;
 
-function animate(move, from = 0, to = move.turns * Math.PI / 2, speed = 360) {
+function animate(move, from = 0, to = move.turns * Math.PI / 2, speed = 360, formula = false) {
   return new Promise(resolve => {
     active = {
       ...move,
@@ -315,10 +372,12 @@ function animate(move, from = 0, to = move.turns * Math.PI / 2, speed = 360) {
     };
     animating = true;
     animationResolve = resolve;
-    const start = performance.now(),
-      ms = duration(speed) * Math.min(1, Math.max(.25, Math.abs(to - from) / (Math.PI / 2)));
+    const ms = duration(speed) * Math.min(1, Math.max(.25, Math.abs(to - from) / (Math.PI / 2)));
+    let previous = performance.now(), elapsed = 0;
     const tick = now => {
-      const p = ms ? clamp((now - start) / ms, 0, 1) : 1,
+      elapsed += (now - previous) * (formula ? formulaRate : 1);
+      previous = now;
+      const p = ms ? clamp(elapsed / ms, 0, 1) : 1,
         e = p < .5 ? 4 * p * p * p : 1 - (-2 * p + 2) ** 3 / 2;
       active.angle = from + (to - from) * e;
       frame();
@@ -474,6 +533,7 @@ function beginMulti(surface) {
   gesture = {
     kind: 'multi',
     surface,
+    viewOnly: !!player,
     pair: pairInfo(p)
   };
 }
@@ -490,13 +550,14 @@ function down(e, surface) {
   try {
     e.currentTarget.setPointerCapture(e.pointerId);
   } catch {}
+  if (player?.transitioning) return;
   if (pair(surface).length === 2) {
     $('dragCue').hidden = true;
     $('dragArrow').setAttribute('hidden', '');
-    if (animating) return;
+    if (animating && !player) return;
     const old = gesture;
     gesture = null;
-    if (active) {
+    if (active && !player) {
       const a = active;
       animate({
         ...a,
@@ -509,11 +570,11 @@ function down(e, surface) {
     } else beginMulti(surface);
     return;
   }
-  if (animating || pumping || player || historyJob) {
-    toast('请等当前转动完成；播放中请先暂停并退出。');
+  if (!player && (animating || pumping || historyJob)) {
+    toast('请等当前转动完成。');
     return;
   }
-  const hit = e.button === 2 ? null : surface === 'three' ? cube?.pick(e.clientX, e.clientY, state()) : flat.pick(e
+  const hit = player || e.button === 2 ? null : surface === 'three' ? cube?.pick(e.clientX, e.clientY, state()) : flat.pick(e
     .clientX, e.clientY, state(), true);
   if (hit?.ambiguous) {
     toast('这里有重叠的点，请放大或从附近轨道起手。');
@@ -526,6 +587,7 @@ function down(e, surface) {
   }
   gesture = {
     kind: hit ? 'pending' : surface === 'three' ? 'orbit' : 'pan',
+    viewOnly: !!player,
     surface,
     hit,
     id: e.pointerId,
@@ -576,7 +638,7 @@ function movePointer(e, surface) {
     }
     return;
   }
-  if (g.surface !== surface || animating) return;
+  if (g.surface !== surface || animating && !g.viewOnly) return;
   if (g.kind === 'multi') {
     const p = pair(surface);
     if (p.length < 2) return;
@@ -733,7 +795,7 @@ for (const [id, surface] of [
   el.addEventListener('contextmenu', e => e.preventDefault());
   el.addEventListener('wheel', e => {
     e.preventDefault();
-    if (animating || gesture) return;
+    if (animating && !player || gesture) return;
     const factor = Math.exp(clamp(e.deltaY, -120, 120) * .002);
     if (surface === 'three') cube?.zoom(factor);
     else flat.zoom(1 / factor);
@@ -1061,13 +1123,13 @@ async function playerStep(dir) {
 async function performPlayerStep(p, dir) {
   if (dir > 0 && p.index < p.moves.length) {
     const m = p.moves[p.index];
-    await animate(m);
+    await animate(m, 0, m.turns * Math.PI / 2, 360, true);
     session.commit([m], moveName(m, p.size), p.restore ? 'turn' : 'formula');
     p.index++;
     lastAction = `${p.restore?'示例':'公式'} · ${describeMove(m, p.size)}`;
   } else if (dir < 0 && p.index > 0) {
     const m = inverse(p.moves[p.index - 1]);
-    await animate(m);
+    await animate(m, 0, m.turns * Math.PI / 2, 360, true);
     session.seek(session.cursor - 1);
     p.index--;
     lastAction = `${p.restore?'示例':'公式'} · 上一步 · ${describeMove(m, p.size)}`;
@@ -1173,6 +1235,14 @@ $('formulaPrev').onclick = () => {
   playerStep(-1);
 };
 $('formulaPlay').onclick = play;
+$('formulaRate').onchange = e => {
+  const rate = Number(e.target.value);
+  if (playbackRates.includes(rate)) {
+    formulaRate = rate;
+    save();
+  }
+  e.target.value = String(formulaRate);
+};
 $('formulaFirst').onclick = () => resetPlayer(false);
 $('formulaReplay').onclick = () => resetPlayer(true);
 $('exitDemo').onclick = exitPlayer;
@@ -1354,7 +1424,8 @@ globalThis.cubeLab = Object.freeze({
       prefs: {...prefs},
       wide: $('wideMode').checked,
       selectedId,
-      lastAction
+      lastAction,
+      formulaRate
     };
   },
   get input() {

@@ -86,6 +86,7 @@ export class CubeView {
     const r = this.canvas.parentElement.getBoundingClientRect();
     this.renderer.setSize(Math.max(1, r.width), Math.max(260, r.height), false);
     this.camera.aspect = r.width / Math.max(260, r.height);
+    this.camera.zoom = 1.12 * Math.min(1, this.camera.aspect);
     this.camera.updateProjectionMatrix();
     this.draw();
   }
