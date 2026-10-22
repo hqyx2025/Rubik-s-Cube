@@ -1,0 +1,15 @@
+{
+  "name": "rubiks-cube",
+  "version": "2.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Interactive Rubik's Cube with synchronized 3D, circular orbit and net views",
+  "homepage": "https://hqyx.website/rubiks-cube/",
+  "repository": {"type": "git", "url": "https://github.com/hqyx2025/Rubik-s-Cube.git"},
+  "license": "Apache-2.0",
+  "engines": {"node": ">=24.0.0"},
+  "scripts": {
+    "start": "node scripts/serve.mjs",
+    "test": "node --test test/*.test.js"
+  }
+}

@@ -1,0 +1,254 @@
+[
+  {
+    "name": "底层十字",
+    "alg": "",
+    "section": "1 · 底层十字",
+    "method": "basic",
+    "note": "无固定公式：拼出白十字，并让棱块侧面与中心块对齐"
+  },
+  {
+    "name": "右手插入",
+    "alg": "R U R' U'",
+    "section": "2 · 底层角块",
+    "method": "basic",
+    "note": "白在侧面时重复至归位"
+  },
+  {
+    "name": "左手插入",
+    "alg": "L' U' L U",
+    "section": "2 · 底层角块",
+    "method": "basic",
+    "note": "镜像情况"
+  },
+  {
+    "name": "往右归位",
+    "alg": "U R U' R' U' F' U F",
+    "section": "3 · 中层棱块",
+    "method": "basic",
+    "note": ""
+  },
+  {
+    "name": "往左归位",
+    "alg": "U' F' U F U R U' R'",
+    "section": "3 · 中层棱块",
+    "method": "basic",
+    "note": ""
+  },
+  {
+    "name": "顶层十字",
+    "alg": "F R U R' U' F'",
+    "section": "4 · 顶层十字",
+    "method": "basic",
+    "note": "重复：点左面 L 再一次出十字"
+  },
+  {
+    "name": "正小鱼 Sune",
+    "alg": "R U R' U R U2 R'",
+    "section": "5 · 顶面翻角",
+    "method": "basic",
+    "note": ""
+  },
+  {
+    "name": "反小鱼",
+    "alg": "R U2 R' U' R U' R'",
+    "section": "5 · 顶面翻角",
+    "method": "basic",
+    "note": ""
+  },
+  {
+    "name": "同面交换",
+    "alg": "R U R' U' R' F R2 U' R' U' R U R' F'",
+    "section": "6 · 顶层角块归位",
+    "method": "basic",
+    "note": "「头灯」一面放后"
+  },
+  {
+    "name": "对角交换",
+    "alg": "F R U' R' U' R U R' F' R U R' U' R' F R F'",
+    "section": "6 · 顶层角块归位",
+    "method": "basic",
+    "note": ""
+  },
+  {
+    "name": "三棱逆时针",
+    "alg": "R U' R U R U R U' R' U' R2",
+    "section": "7 · 顶层棱块归位",
+    "method": "basic",
+    "note": ""
+  },
+  {
+    "name": "三棱顺时针",
+    "alg": "R2 U R U R' U' R' U' R' U R'",
+    "section": "7 · 顶层棱块归位",
+    "method": "basic",
+    "note": ""
+  },
+  {
+    "name": "对棱互换 H",
+    "alg": "M2 U M2 U2 M2 U M2",
+    "section": "7 · 顶层棱块归位",
+    "method": "basic",
+    "note": ""
+  },
+  {
+    "name": "邻棱互换 Z",
+    "alg": "M2 U M2 U M' U2 M2 U2 M' U2",
+    "section": "7 · 顶层棱块归位",
+    "method": "basic",
+    "note": ""
+  },
+  {
+    "name": "基本插入",
+    "alg": "R U R'",
+    "section": "核心手法",
+    "method": "f2l",
+    "note": ""
+  },
+  {
+    "name": "反向插入",
+    "alg": "R U' R'",
+    "section": "核心手法",
+    "method": "f2l",
+    "note": ""
+  },
+  {
+    "name": "配对前奏",
+    "alg": "y' R U R'",
+    "section": "核心手法",
+    "method": "f2l",
+    "note": "如 F U F'，把角棱移到一起"
+  },
+  {
+    "name": "已配对直接插入",
+    "alg": "R U R'",
+    "section": "典型 Case",
+    "method": "f2l",
+    "note": "角在 URF、棱在 UR"
+  },
+  {
+    "name": "角在顶、白朝上",
+    "alg": "(R U2 R' U)2 y' R' U' R",
+    "section": "典型 Case",
+    "method": "f2l",
+    "note": ""
+  },
+  {
+    "name": "角在顶、白朝侧",
+    "alg": "U R U' R' U' F' U F",
+    "section": "典型 Case",
+    "method": "f2l",
+    "note": ""
+  },
+  {
+    "name": "横线（一字）",
+    "alg": "F R U R' U' F'",
+    "section": "A · 顶面十字（3）",
+    "method": "oll",
+    "note": ""
+  },
+  {
+    "name": "L 形（直角）",
+    "alg": "F U R U' R' F'",
+    "section": "A · 顶面十字（3）",
+    "method": "oll",
+    "note": ""
+  },
+  {
+    "name": "点型",
+    "alg": "F R U R' U' F' f R U R' U' f'",
+    "section": "A · 顶面十字（3）",
+    "method": "oll",
+    "note": "分两步做：先横线再 L"
+  },
+  {
+    "name": "正小鱼 Sune",
+    "alg": "R U R' U R U2 R'",
+    "section": "B · 顶面翻角（7）",
+    "method": "oll",
+    "note": ""
+  },
+  {
+    "name": "反小鱼",
+    "alg": "R U2 R' U' R U' R'",
+    "section": "B · 顶面翻角（7）",
+    "method": "oll",
+    "note": ""
+  },
+  {
+    "name": "双对称十字",
+    "alg": "R U2 R' U' R U R' U' R U' R'",
+    "section": "B · 顶面翻角（7）",
+    "method": "oll",
+    "note": ""
+  },
+  {
+    "name": "单对称十字",
+    "alg": "R U2 R2 U' R2 U' R2 U2 R",
+    "section": "B · 顶面翻角（7）",
+    "method": "oll",
+    "note": ""
+  },
+  {
+    "name": "同向由字",
+    "alg": "R2 D' R U2 R' D R U2 R",
+    "section": "B · 顶面翻角（7）",
+    "method": "oll",
+    "note": ""
+  },
+  {
+    "name": "对向由字",
+    "alg": "r U R' U' r' F R F'",
+    "section": "B · 顶面翻角（7）",
+    "method": "oll",
+    "note": ""
+  },
+  {
+    "name": "梅花七",
+    "alg": "F' r U R' U' r' F R",
+    "section": "B · 顶面翻角（7）",
+    "method": "oll",
+    "note": ""
+  },
+  {
+    "name": "同面交换 T",
+    "alg": "R U R' U' R' F R2 U' R' U' R U R' F'",
+    "section": "A · 顶层角块（2）",
+    "method": "pll",
+    "note": "「头灯」放后"
+  },
+  {
+    "name": "对角交换 Y",
+    "alg": "F R U' R' U' R U R' F' R U R' U' R' F R F'",
+    "section": "A · 顶层角块（2）",
+    "method": "pll",
+    "note": ""
+  },
+  {
+    "name": "三棱逆时针 Ua",
+    "alg": "R U' R U R U R U' R' U' R2",
+    "section": "B · 顶层棱块（4）",
+    "method": "pll",
+    "note": ""
+  },
+  {
+    "name": "三棱顺时针 Ub",
+    "alg": "R2 U R U R' U' R' U' R' U R'",
+    "section": "B · 顶层棱块（4）",
+    "method": "pll",
+    "note": ""
+  },
+  {
+    "name": "对棱互换 H",
+    "alg": "M2 U M2 U2 M2 U M2",
+    "section": "B · 顶层棱块（4）",
+    "method": "pll",
+    "note": ""
+  },
+  {
+    "name": "邻棱互换 Z",
+    "alg": "M2 U M2 U M' U2 M2 U2 M' U2",
+    "section": "B · 顶层棱块（4）",
+    "method": "pll",
+    "note": ""
+  }
+]

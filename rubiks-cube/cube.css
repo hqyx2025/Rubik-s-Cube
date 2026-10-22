@@ -1,0 +1,1158 @@
+.lab-wrap {
+  max-width: 1440px;
+  margin: auto;
+  padding: 0 var(--gutter)
+}
+
+.lab-header {
+  min-height: 88px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px
+}
+
+.lab-brand {
+  font: 500 28px/1.4 var(--display)
+}
+
+.lab-header nav {
+  display: flex;
+  align-items: center;
+  gap: 28px;
+  font-size: 14px
+}
+
+.lab-header a,
+.lab-header button {
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center
+}
+
+.lab-header button {
+  padding: 8px 16px;
+  background: var(--surface)
+}
+
+.lab-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 24px;
+  margin: 30px 0 26px
+}
+
+.lab-heading h1 {
+  font-size: 46px;
+  margin: 0 0 14px
+}
+
+.lab-heading p {
+  font-size: 16px;
+  margin: 0;
+  color: var(--muted)
+}
+
+.lab-toolbar,
+.toolbar-group,
+.quick-controls,
+.face-controls,
+.turn-controls,
+.advanced-controls,
+.player-controls,
+.history-tools {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap
+}
+
+.lab-toolbar {
+  justify-content: space-between;
+  gap: 18px;
+  margin-bottom: 24px
+}
+
+.lab-toolbar label,
+.lab-settings label,
+.advanced-controls label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 14px;
+  white-space: nowrap
+}
+
+.lab-wrap button,
+dialog button {
+  min-height: 44px;
+  padding: 10px 17px;
+  background: var(--surface);
+  font-size: 14px;
+  border-radius: 0;
+  border: 0
+}
+
+.lab-wrap button:hover,
+dialog button:hover {
+  background: var(--soft)
+}
+
+.lab-wrap .text-button {
+  background: none;
+  text-decoration: underline;
+  text-underline-offset: 5px;
+  font-size: 13px;
+  padding: 10px 0
+}
+
+.lab-wrap .lab-primary,
+dialog .lab-primary {
+  background: var(--ink);
+  color: var(--bg)
+}
+
+.lab-wrap .lab-primary:hover,
+dialog .lab-primary:hover {
+  background: var(--accent)
+}
+
+.lab-wrap select {
+  width: auto;
+  min-height: 44px;
+  padding: 8px 30px 8px 12px;
+  background: var(--surface);
+  border: 0;
+  border-radius: 0;
+  font-size: 14px
+}
+
+.lab-settings {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  flex-wrap: wrap;
+  padding: 22px;
+  background: var(--surface);
+  margin-bottom: 24px
+}
+
+.lab-settings input[type=range] {
+  width: 150px;
+  accent-color: var(--accent);
+  padding: 0
+}
+
+.lab-settings p {
+  flex-basis: 100%;
+  font-size: 13px;
+  color: var(--muted);
+  margin: 0
+}
+
+.lab-settings output {
+  font-size: 13px
+}
+
+.lab-notice {
+  background: var(--surface);
+  padding: 18px 22px;
+  font-size: 14px;
+  margin-bottom: 20px
+}
+
+.lab-notice button {
+  margin-left: 12px
+}
+
+.workbench {
+  display: grid;
+  grid-template-columns: minmax(0, 1.08fr) minmax(0, 1fr);
+  gap: 20px
+}
+
+.lab-panel {
+  background: var(--surface);
+  min-width: 0;
+  overflow: hidden
+}
+
+.panel-heading {
+  padding: 22px 26px 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px
+}
+
+.panel-heading h2 {
+  font-size: 25px;
+  margin: 0
+}
+
+.cube-stage {
+  position: relative;
+  min-height: 400px;
+  touch-action: none;
+  user-select: none
+}
+
+.cube-stage canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+  outline-offset: -5px
+}
+
+.axis-key {
+  position: absolute;
+  bottom: 12px;
+  left: 12px;
+  right: 12px;
+  text-align: center;
+  font-size: 12px;
+  color: var(--muted);
+  pointer-events: none
+}
+
+.drag-cue {
+  position: absolute;
+  top: 16px;
+  left: 22px;
+  pointer-events: none;
+  font-size: 14px;
+  background: var(--bg);
+  padding: 8px 12px;
+  color: var(--ink)
+}
+
+.view-error {
+  position: absolute;
+  inset: 20%;
+  background: var(--surface);
+  padding: 22px;
+  font-size: 14px;
+  z-index: 2
+}
+
+.quick-controls {
+  padding: 14px 22px 20px;
+  background: var(--soft)
+}
+
+.quick-controls button {
+  background: var(--bg)
+}
+
+.practice-status {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  font-size: 13px;
+  margin-left: auto
+}
+
+.practice-status b {
+  font-size: 20px;
+  font-weight: 400;
+  font-variant-numeric: tabular-nums;
+  margin-left: 5px
+}
+
+#solvedBadge {
+  color: var(--muted)
+}
+
+.view-tabs {
+  display: flex;
+  gap: 18px;
+  padding: 0 26px;
+  min-height: 44px
+}
+
+.view-tabs button {
+  background: none;
+  padding: 6px 0;
+  font-size: 13px;
+  min-height: 44px
+}
+
+.view-tabs button[aria-pressed=true] {
+  text-decoration: underline;
+  text-underline-offset: 6px;
+  text-decoration-thickness: 2px
+}
+
+.diagram-stage {
+  height: 360px;
+  position: relative;
+  touch-action: none;
+  overflow: hidden;
+  user-select: none
+}
+
+.diagram-stage svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+  touch-action: none;
+  outline-offset: -5px;
+  overflow: hidden
+}
+
+.diagram-hint {
+  font-size: 13px;
+  color: var(--muted);
+  padding: 10px 26px 18px;
+  margin: 0;
+  line-height: 1.8;
+  min-height: 60px
+}
+
+.orbit {
+  stroke: var(--line);
+  stroke-width: .8;
+  opacity: .45;
+  vector-effect: non-scaling-stroke
+}
+
+.orbit.hot {
+  stroke: var(--accent);
+  stroke-width: 1.2;
+  opacity: .6
+}
+
+.diagram-stage circle,
+.diagram-stage rect {
+  stroke: var(--surface);
+  stroke-width: 1;
+  vector-effect: non-scaling-stroke
+}
+
+.diagram-stage .moving {
+  stroke: var(--ink);
+  stroke-width: 1.2
+}
+
+.diagram-stage .picked {
+  stroke: var(--ink);
+  stroke-width: 2.7
+}
+
+.face-name {
+  font: 12px var(--body);
+  fill: var(--muted)
+}
+
+.selection-info {
+  font-size: 14px;
+  color: var(--muted);
+  min-height: 48px;
+  display: flex;
+  align-items: center;
+  padding: 12px 0
+}
+
+.layer-controls {
+  padding: 20px 0 24px;
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap
+}
+
+.face-controls>span {
+  font-size: 13px;
+  color: var(--muted);
+  margin-right: 8px
+}
+
+.face-controls button[aria-pressed=true] {
+  background: var(--ink);
+  color: var(--bg)
+}
+
+.turn-controls button {
+  background: var(--ink);
+  color: var(--bg)
+}
+
+.advanced-controls {
+  flex-basis: 100%;
+  padding: 22px;
+  background: var(--surface);
+  gap: 16px;
+  margin-top: 8px
+}
+
+.advanced-controls p {
+  flex-basis: 100%;
+  font-size: 13px;
+  color: var(--muted);
+  margin: 0
+}
+
+.advanced-controls .check-label input {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--accent)
+}
+
+.keyboard-help {
+  line-height: 1.9
+}
+
+.history-panel {
+  background: var(--surface);
+  padding: 18px 24px;
+  margin: 8px 0 28px
+}
+
+.history-panel summary {
+  min-height: 44px;
+  cursor: pointer;
+  font-size: 16px
+}
+
+.history-panel summary span {
+  margin-left: 12px;
+  font-size: 13px;
+  color: var(--muted)
+}
+
+.history-tools {
+  margin: 10px 0
+}
+
+.history-tools span {
+  font-size: 13px;
+  color: var(--muted)
+}
+
+.history-panel ol {
+  max-height: 280px;
+  overflow: auto;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  gap: 6px
+}
+
+.history-panel li button {
+  display: flex;
+  text-align: left;
+  justify-content: space-between;
+  gap: 20px;
+  width: 100%;
+  background: var(--bg);
+  font-size: 13px
+}
+
+.history-panel button[aria-current=step] {
+  background: var(--ink);
+  color: var(--bg)
+}
+
+.history-panel li span {
+  font-variant-numeric: tabular-nums
+}
+
+.history-panel details {
+  padding: 4px 16px
+}
+
+.history-panel details summary {
+  font-size: 12px;
+  min-height: 36px
+}
+
+.history-panel details p {
+  font-size: 12px;
+  overflow-wrap: anywhere;
+  line-height: 1.9;
+  margin: 0 0 8px
+}
+
+.formula-player {
+  background: var(--surface);
+  padding: 26px;
+  margin: 26px 0
+}
+
+.player-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 20px
+}
+
+.player-heading h2 {
+  font-size: 28px;
+  margin: 0 0 12px
+}
+
+.player-heading p {
+  font-size: 14px;
+  color: var(--muted)
+}
+
+.formula-steps {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin: 12px 0 22px
+}
+
+.formula-steps span {
+  font-size: 16px;
+  min-width: 32px;
+  padding: 8px;
+  text-align: center
+}
+
+.formula-steps [aria-current=step] {
+  background: var(--ink);
+  color: var(--bg)
+}
+
+.player-controls span {
+  font-size: 13px;
+  color: var(--muted)
+}
+
+.lab-footer {
+  margin: 42px 0 24px;
+  display: flex;
+  align-items: flex-start;
+  gap: 24px;
+  font-size: 13px;
+  color: var(--muted);
+  flex-wrap: wrap
+}
+
+.lab-footer p {
+  max-width: 72ch;
+  flex: 1;
+  margin: 0;
+  min-width: 240px
+}
+
+.lab-footer a {
+  text-decoration: underline;
+  text-underline-offset: 4px;
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center
+}
+
+.lab-footer p a {
+  display: inline;
+  min-height: 0
+}
+
+dialog {
+  border-radius: 0;
+  width: min(800px, calc(100% - 32px));
+  max-height: 86dvh;
+  padding: 28px;
+  background: var(--bg)
+}
+
+dialog h2 {
+  font-size: 28px;
+  margin: 0 0 16px
+}
+
+dialog>p {
+  font-size: 14px;
+  color: var(--muted)
+}
+
+.dialog-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 20px
+}
+
+.dialog-heading button {
+  flex-shrink: 0
+}
+
+.formula-catalog {
+  display: grid;
+  gap: 10px;
+  max-height: 57dvh;
+  overflow: auto
+}
+
+.formula-item {
+  padding: 18px;
+  background: var(--surface)
+}
+
+.formula-item h3 {
+  font-size: 18px;
+  margin: 0 0 8px
+}
+
+.formula-item p {
+  font-size: 13px;
+  line-height: 1.8;
+  margin: 0 0 12px;
+  overflow-wrap: anywhere
+}
+
+.formula-item small {
+  font-size: 12px;
+  color: var(--muted)
+}
+
+.formula-item-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap
+}
+
+.formula-item button {
+  background: var(--bg)
+}
+
+.help-list {
+  padding-left: 24px
+}
+
+.help-list li {
+  padding-left: 5px
+}
+
+.help-list strong {
+  font-size: 16px;
+  font-weight: 400
+}
+
+.help-list p {
+  font-size: 14px;
+  margin: 8px 0 22px;
+  color: var(--muted)
+}
+
+.confirm-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+  margin-top: 24px
+}
+
+.lab-toast {
+  position: fixed;
+  bottom: 22px;
+  left: 50%;
+  transform: translateX(-50%);
+  max-width: calc(100% - 32px);
+  background: var(--ink);
+  color: var(--bg);
+  font-size: 14px;
+  padding: 14px 22px;
+  z-index: 200;
+  width: max-content
+}
+
+@media(max-width:1100px) {
+  .lab-toolbar {
+    align-items: flex-start
+  }
+
+  .cube-stage {
+    min-height: 370px
+  }
+
+  .diagram-stage {
+    height: 330px
+  }
+
+  .panel-heading {
+    padding-inline: 20px
+  }
+
+  .panel-heading h2 {
+    font-size: 23px
+  }
+
+  .view-tabs {
+    padding-inline: 20px
+  }
+
+  .diagram-hint {
+    padding-inline: 20px
+  }
+
+  .lab-toolbar button {
+    padding-inline: 14px
+  }
+}
+
+@media(max-width:850px) {
+  .workbench {
+    grid-template-columns: 1fr
+  }
+
+  .cube-stage {
+    min-height: 350px
+  }
+
+  .diagram-stage {
+    height: 420px
+  }
+
+  .diagram-hint {
+    min-height: 0
+  }
+
+  .lab-toolbar {
+    gap: 14px
+  }
+
+  .layer-controls {
+    justify-content: flex-start
+  }
+
+  .advanced-controls {
+    gap: 14px
+  }
+
+  .practice-status {
+    gap: 14px
+  }
+
+  .lab-header nav {
+    gap: 18px
+  }
+}
+
+@media(max-width:640px) {
+  .lab-header {
+    min-height: 76px;
+    gap: 12px
+  }
+
+  .lab-brand {
+    font-size: 24px
+  }
+
+  .lab-header nav {
+    gap: 14px;
+    font-size: 13px
+  }
+
+  .lab-header nav>a:nth-child(2) {
+    display: none
+  }
+
+  .lab-header button {
+    padding-inline: 12px
+  }
+
+  .lab-heading {
+    margin: 20px 0 24px;
+    gap: 14px
+  }
+
+  .lab-heading h1 {
+    font-size: 34px
+  }
+
+  .lab-heading p {
+    font-size: 14px;
+    line-height: 1.9
+  }
+
+  .lab-heading .text-button {
+    font-size: 12px;
+    white-space: nowrap;
+    align-self: flex-start;
+    margin-top: 3px
+  }
+
+  .toolbar-group {
+    gap: 8px
+  }
+
+  .lab-toolbar {
+    margin-bottom: 20px
+  }
+
+  .lab-toolbar label {
+    font-size: 13px;
+    gap: 6px
+  }
+
+  .lab-wrap button {
+    padding-inline: 14px
+  }
+
+  .lab-toolbar .toolbar-group:last-child {
+    width: 100%;
+    justify-content: space-between;
+    gap: 5px
+  }
+
+  .lab-toolbar button {
+    font-size: 13px;
+    padding: 10px 12px
+  }
+
+  .panel-heading {
+    padding: 18px 18px 0
+  }
+
+  .panel-heading h2 {
+    font-size: 22px
+  }
+
+  .cube-stage {
+    min-height: 300px
+  }
+
+  .diagram-stage {
+    height: 360px
+  }
+
+  .quick-controls {
+    padding: 12px 16px 16px;
+    gap: 8px
+  }
+
+  .quick-controls button {
+    font-size: 13px;
+    padding-inline: 14px
+  }
+
+  .practice-status {
+    font-size: 12px;
+    gap: 10px
+  }
+
+  .practice-status b {
+    font-size: 18px
+  }
+
+  .selection-info {
+    font-size: 13px;
+    line-height: 1.9;
+    padding: 16px 0
+  }
+
+  .face-controls {
+    gap: 6px
+  }
+
+  .face-controls>span {
+    margin-right: 4px
+  }
+
+  .face-controls button {
+    font-size: 12px;
+    padding-inline: 10px;
+    min-width: 44px
+  }
+
+  .layer-controls {
+    padding-top: 4px
+  }
+
+  .turn-controls {
+    gap: 8px
+  }
+
+  .turn-controls button {
+    font-size: 13px
+  }
+
+  .advanced-controls {
+    padding: 18px;
+    gap: 12px
+  }
+
+  .advanced-controls label {
+    font-size: 13px
+  }
+
+  .history-panel {
+    padding: 16px
+  }
+
+  .lab-settings {
+    padding: 18px;
+    gap: 18px
+  }
+
+  .lab-settings label {
+    flex-wrap: wrap;
+    white-space: normal
+  }
+
+  .lab-settings input[type=range] {
+    width: 130px
+  }
+
+  .lab-footer {
+    margin-top: 30px;
+    gap: 8px 20px
+  }
+
+  .lab-footer p {
+    flex-basis: 100%;
+    font-size: 12px
+  }
+
+  .lab-footer>a {
+    font-size: 12px
+  }
+
+  .formula-player {
+    padding: 20px
+  }
+
+  .player-heading {
+    display: block
+  }
+
+  .player-heading h2 {
+    font-size: 24px
+  }
+
+  .player-heading>button {
+    margin-bottom: 16px
+  }
+
+  .player-controls {
+    gap: 8px
+  }
+
+  .player-controls button {
+    font-size: 13px
+  }
+
+  dialog {
+    padding: 22px
+  }
+
+  dialog h2 {
+    font-size: 24px
+  }
+
+  .view-tabs {
+    padding-inline: 18px
+  }
+
+  .diagram-hint {
+    font-size: 12px;
+    padding: 6px 18px 18px
+  }
+
+  .orbit {
+    stroke-width: .8
+  }
+
+  .lab-toast {
+    font-size: 13px;
+    line-height: 1.8
+  }
+}
+
+.orbit {
+  stroke: var(--muted);
+  opacity: .78;
+  stroke-width: .85
+}
+
+.orbit.hot {
+  stroke: var(--ink);
+  opacity: 1;
+  stroke-width: 1.8
+}
+
+.diagram-stage circle[data-sticker] {
+  stroke: var(--muted);
+  stroke-width: .85
+}
+
+.diagram-stage .fixed-center {
+  stroke: var(--ink);
+  stroke-width: 1.8;
+  stroke-dasharray: 3 2
+}
+
+.orbit-tools {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 26px;
+  flex-wrap: wrap
+}
+
+.orbit-tools>span {
+  font-size: 12px;
+  color: var(--muted);
+  margin-right: 4px
+}
+
+.orbit-tools button {
+  font-size: 12px;
+  min-height: 44px;
+  padding: 7px 11px;
+  background: none
+}
+
+.orbit-tools button[aria-pressed=true] {
+  background: var(--soft);
+  text-decoration: underline;
+  text-underline-offset: 5px
+}
+
+.diagram-stage {
+  height: 330px
+}
+
+@media(max-width:850px) {
+  .diagram-stage {
+    height: 390px
+  }
+}
+
+@media(max-width:640px) {
+  .orbit-tools {
+    padding-inline: 18px;
+    gap: 4px
+  }
+
+  .orbit-tools button {
+    padding-inline: 10px
+  }
+
+  .diagram-stage {
+    height: 360px
+  }
+}
+
+.gesture-arrow {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 4;
+  overflow: visible
+}
+
+.gesture-arrow path {
+  fill: none;
+  stroke: var(--ink);
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round
+}
+
+.three-panel>.formula-player {
+  margin: 0 20px 16px;
+  padding: 18px;
+  background: var(--soft)
+}
+
+.three-panel .formula-steps {
+  gap: 3px
+}
+
+.three-panel .formula-steps span {
+  font-size: 14px;
+  padding: 5px
+}
+
+.three-panel .player-heading h2 {
+  font-size: 22px
+}
+
+.turn-controls button:hover,
+.face-controls button[aria-pressed=true]:hover,
+.history-panel button[aria-current=step]:hover {
+  background: var(--accent);
+  color: var(--bg)
+}
+
+.lab-footer a:hover {
+  color: var(--ink)
+}
+
+.transfer-arrow {
+  stroke: var(--ink);
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  vector-effect: non-scaling-stroke
+}
+
+.manual-controls {
+  display: grid;
+  gap: 14px;
+  padding: 18px 22px 22px;
+  background: var(--soft)
+}
+
+.manual-controls .face-controls {
+  gap: 6px
+}
+
+.manual-controls .face-controls button {
+  background: var(--bg);
+  min-width: 44px
+}
+
+.manual-controls .face-controls button[aria-pressed=true] {
+  background: var(--ink);
+  color: var(--bg)
+}
+
+.diagram-panel {
+  display: flex;
+  flex-direction: column
+}
+
+.diagram-stage {
+  flex: 1;
+  min-height: 330px
+}
+
+.layer-controls:has(#advancedControls[hidden]) {
+  display: none
+}
+
+.manual-controls .turn-controls {
+  gap: 8px
+}
+
+@media(max-width:850px) {
+  .diagram-stage {
+    flex: none
+  }
+}
+
+@media(max-width:640px) {
+  .manual-controls {
+    padding: 16px;
+    gap: 12px
+  }
+
+  .manual-controls .face-controls {
+    gap: 5px
+  }
+
+  .manual-controls .face-controls button {
+    padding-inline: 8px;
+    min-width: 44px
+  }
+}
