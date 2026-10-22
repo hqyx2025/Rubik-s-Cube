@@ -27,6 +27,8 @@ import {
   CubeView,
   FlatView
 } from './views.js';
+import {mountCatalog} from './catalog.js';
+import {exampleFor, recognition, stepExplanation} from './curriculum.js';
 
 const $ = id => document.getElementById(id),
   storeKey = 'rubiks-lab-v2',
@@ -256,10 +258,11 @@ function playerUI() {
   }
   $('formulaPlayer').hidden = false;
   $('playerTitle').textContent = player.name;
-  $('playerContext').textContent = player.restore ? '独立三阶示例 · 退出恢复原局，演示不会覆盖你的进度。' : '正在应用到你的当前局面 · 完成的动作已记入历史，不保证复原。';
+  const size = player.size;
+  $('playerContext').textContent = player.restore ? `独立${size===4?'四':'三'}阶示例 · 退出恢复原局，演示不会覆盖你的进度。` : `正在应用到你的${size}阶局面 · 完成的动作已记入历史，不保证复原。`;
   $('formulaSteps').replaceChildren(...player.moves.map((m, i) => {
     const s = document.createElement('span');
-    s.textContent = moveName(m, 3);
+    s.textContent = player.steps?.[i]?.token || moveName(m, size);
     if (i === player.index) s.setAttribute('aria-current', 'step');
     return s;
   }));
@@ -268,10 +271,23 @@ function playerUI() {
   $('formulaPrev').disabled = animating || player.transitioning || player.index === 0;
   $('formulaNext').disabled = animating || player.transitioning || player.index >= player.moves.length;
   $('formulaReplay').disabled = !!player.transitioning;
+  $('formulaFirst').disabled = !!player.transitioning;
   $('exitDemo').disabled = !!player.transitioning;
   $('formulaApply').disabled = !!player.transitioning;
   $('formulaApply').hidden = !player.restore;
   $('formulaProgress').textContent = `${player.index} / ${player.moves.length}`;
+  const stepIndex = animating ? player.index - (player.direction<0?1:0) : Math.max(0,player.index-1),
+    step = player.moves[stepIndex], token = player.steps?.[stepIndex]?.token || (step && moveName(step,size));
+  $('formulaStepDetail').textContent = player.index===0&&!animating ? '起点 · 尚未执行。下一步：'+stepExplanation(player.moves[0],size,player.steps?.[0]?.token) :
+    `${animating?'正在执行':'已完成'}第${stepIndex+1}步 ${token} · ${stepExplanation(player.direction<0&&animating?inverse(step):step,size,token)}${player.index===player.moves.length&&!animating?' 本条已完成，可回到第一步或重新播放。':''}`;
+  if ($('formulaWalkthrough').dataset.formula !== player.id) {
+    $('formulaWalkthrough').dataset.formula = player.id;
+    $('formulaRecognition').textContent = recognition(player);
+    $('formulaWalkthrough').replaceChildren(...player.moves.map((m,i)=>{
+      const token=player.steps?.[i]?.token || moveName(m,size),li=document.createElement('li');li.textContent=`${token}：${stepExplanation(m,size,token)}`;return li;
+    }));
+  }
+  [...$('formulaWalkthrough').children].forEach((li,i)=>i===stepIndex?li.setAttribute('aria-current','step'):li.removeAttribute('aria-current'));
 }
 
 function setSelection(sel, id = null) {
@@ -975,51 +991,15 @@ try {
 } catch {
   toast('公式资料未能加载，请刷新后重试。');
 }
-for (const formula of formulas) {
-  const item = document.createElement('article');
-  item.className = 'formula-item';
-  const title = document.createElement('h3'),
-    text = document.createElement('p'),
-    small = document.createElement('small'),
-    actions = document.createElement('div'),
-    play = document.createElement('button'),
-    copy = document.createElement('button');
-  title.textContent = formula.name;
-  text.textContent = formula.alg;
-  small.textContent = formula.section.replace(/^\d+\s*·\s*/, '');
-  actions.className = 'formula-item-actions';
-  play.textContent = '逐步演示';
-  copy.textContent = '复制公式';
-  play.disabled = !formula.alg;
-  copy.hidden = !formula.alg;
-  copy.disabled = !formula.alg;
-  actions.hidden = !formula.alg;
-  if (formula.alg) play.dataset.formulaDemo = formula.name;
-  play.onclick = () => startDemo(formula);
-  copy.onclick = async () => {
-    try {
-      await navigator.clipboard.writeText(formula.alg);
-      toast('公式已复制');
-    } catch {
-      toast('复制未成功，请选中公式文字复制。');
-    }
-  };
-  actions.append(play, copy);
-  item.append(small, title, text, actions);
-  if (formula.note) {
-    const note = document.createElement('p');
-    note.textContent = formula.note;
-    text.after(note);
-  }
-  $('formulaCatalog').append(item);
-}
+const catalog = mountCatalog(formulas, startDemo, toast);
 async function startDemo(formula) {
   await boundary();
   if (historyJob) return;
   if (player) await exitPlayer();
-  let moves;
+  if (player) return;
+  let example;
   try {
-    moves = parseFormula(formula.alg);
+    example = exampleFor(formula);
   } catch (e) {
     toast(e.message);
     return;
@@ -1039,12 +1019,14 @@ async function startDemo(formula) {
     wide: $('wideMode').checked,
     scroll: {x: scrollX, y: scrollY}
   };
-  session = new CubeSession(3);
-  for (const m of moves.slice().reverse()) session.state = applyMove(session.state, inverse(m));
+  const {moves,steps} = example;
+  session = new CubeSession(formula.size);
+  session.state = cloneState(example.state);
   session.base = cloneState(session.state);
   player = {
     ...formula,
     moves,
+    steps,
     index: 0,
     playing: false,
     initial: structuredClone(session.serialize()),
@@ -1055,7 +1037,9 @@ async function startDemo(formula) {
   selectedId = null;
   $('wideMode').checked = false;
   lastAction = '示例 · 尚未播放';
-  cube?.home(3);
+  $('formulaWalkthrough').dataset.formula = '';
+  $('formulaExplanation').open = false;
+  cube?.home(formula.size);
   ui();
   $('formulaPlayer').scrollIntoView({
     block: 'nearest',
@@ -1065,6 +1049,7 @@ async function startDemo(formula) {
 async function playerStep(dir) {
   if (!player || animating || player.transitioning || player.step) return;
   const p = player;
+  p.direction = dir;
   p.step = performPlayerStep(p, dir);
   ui();
   try {
@@ -1077,15 +1062,15 @@ async function performPlayerStep(p, dir) {
   if (dir > 0 && p.index < p.moves.length) {
     const m = p.moves[p.index];
     await animate(m);
-    session.commit([m], moveName(m, 3), p.restore ? 'turn' : 'formula');
+    session.commit([m], moveName(m, p.size), p.restore ? 'turn' : 'formula');
     p.index++;
-    lastAction = `${p.restore?'示例':'公式'} · ${describeMove(m, 3)}`;
+    lastAction = `${p.restore?'示例':'公式'} · ${describeMove(m, p.size)}`;
   } else if (dir < 0 && p.index > 0) {
     const m = inverse(p.moves[p.index - 1]);
     await animate(m);
     session.seek(session.cursor - 1);
     p.index--;
-    lastAction = `${p.restore?'示例':'公式'} · 上一步 · ${describeMove(m, 3)}`;
+    lastAction = `${p.restore?'示例':'公式'} · 上一步 · ${describeMove(m, p.size)}`;
   }
   active = null;
   ui();
@@ -1126,7 +1111,7 @@ async function stopPlayer(p) {
   await p.step;
   await p.run;
 }
-async function replayPlayer() {
+async function resetPlayer(autoPlay = false) {
   const p = player;
   if (!p || p.transitioning) return;
   p.transitioning = true;
@@ -1135,12 +1120,13 @@ async function replayPlayer() {
   if (player !== p) return;
   session = CubeSession.restore(p.initial);
   p.index = 0;
-  lastAction = `${p.restore?'示例':'公式'} · 从头播放`;
+  p.direction = 1;
+  lastAction = `${p.restore?'示例':'公式'} · ${autoPlay?'从头播放':'回到第一步'}`;
   p.transitioning = false;
   active = null;
   ui();
   save();
-  play();
+  if (autoPlay) play();
 }
 async function exitPlayer() {
   if (!player || player.transitioning) return;
@@ -1174,6 +1160,7 @@ async function exitPlayer() {
 $('formulaBtn').onclick = async () => {
   await boundary();
   if (historyJob) return;
+  catalog.open(player?.restore?.session.state.size || state().size);
   $('formulaDialog').showModal();
 };
 $('closeFormula').onclick = () => $('formulaDialog').close();
@@ -1186,7 +1173,8 @@ $('formulaPrev').onclick = () => {
   playerStep(-1);
 };
 $('formulaPlay').onclick = play;
-$('formulaReplay').onclick = replayPlayer;
+$('formulaFirst').onclick = () => resetPlayer(false);
+$('formulaReplay').onclick = () => resetPlayer(true);
 $('exitDemo').onclick = exitPlayer;
 $('formulaApply').onclick = async () => {
   if (!player?.restore) return;
@@ -1194,12 +1182,12 @@ $('formulaApply').onclick = async () => {
   p.playing = false;
   await boundary();
   const original = p.restore;
-  if (original.session.state.size !== 3) {
-    toast('此公式按三阶解释；你的原局不是三阶，不能直接应用。');
+  if (original.session.state.size !== p.size) {
+    toast(`此公式按${p.size}阶解释；你的原局阶数不匹配，不能直接应用。`);
     return;
   }
   const inner = p.moves.some(m => m.lo === m.hi && m.lo === 1 || m.lo !== m.hi);
-  if (!await ask('应用到当前局面？', `将对你的三阶局面执行${p.moves.length}步${inner?'，并进入进阶模式':''}。这不保证复原；完成动作可从历史撤销。`, '应用公式'))
+  if (!await ask('应用到当前局面？', `将对你的${p.size}阶局面执行${p.moves.length}步${inner?'，并进入进阶模式':''}。这不保证复原；完成动作可从历史撤销。`, '应用公式'))
     return;
   if (original.session.cursor !== original.session.events.length && !await branchAllowedFor(original.session))
     return;
@@ -1207,8 +1195,14 @@ $('formulaApply').onclick = async () => {
   mode = inner ? 'advanced' : mode;
   player = {
     name: p.name,
+    id: p.id,
+    size: p.size,
+    stage: p.stage,
+    group: p.group,
+    note: p.note,
     alg: p.alg,
     moves: p.moves,
+    steps: p.steps,
     index: 0,
     playing: false,
     initial: structuredClone(session.serialize()),

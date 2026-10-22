@@ -600,6 +600,205 @@ dialog>p {
   overflow: auto
 }
 
+#formulaDialog[open] {
+  display: flex;
+  flex-direction: column;
+  width: min(960px, calc(100% - 32px));
+  max-height: 92dvh;
+  overflow: hidden;
+}
+
+#formulaDialog>.dialog-heading,
+#formulaDialog>.formula-filters,
+#formulaDialog>.formula-stage {
+  flex-shrink: 0;
+}
+
+#formulaDialog>.formula-catalog {
+  min-height: 100px;
+  max-height: none;
+  flex: 1 1 auto;
+  overscroll-behavior: contain;
+}
+
+.formula-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.formula-filters label {
+  display: grid;
+  gap: 4px;
+  font-size: 13px;
+  flex: 1 1 170px;
+}
+
+.formula-filters input,
+.formula-filters select {
+  padding: 8px 10px;
+  min-height: 44px;
+}
+
+.formula-stage {
+  display: flex;
+  gap: 6px;
+  overflow: auto;
+  padding: 2px 3px 8px;
+}
+
+.formula-stage button {
+  flex-shrink: 0;
+  min-height: 44px;
+  padding: 8px 12px;
+  font-size: 13px;
+  background: var(--surface);
+}
+
+.formula-stage button[aria-pressed=true] {
+  background: var(--ink);
+  color: var(--bg);
+}
+
+#formulaDialog .formula-result {
+  margin: 0 0 10px;
+  font-size: 13px;
+}
+
+#formulaDialog .formula-reference {
+  margin: 12px 0 0;
+  font-size: 12px;
+  line-height: 1.6;
+  flex-shrink: 0;
+}
+
+.formula-reference a,
+.formula-source {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.lesson-guide {
+  padding: 18px;
+}
+
+.lesson-guide h3 {
+  font-size: 22px;
+  margin-bottom: 10px;
+}
+
+.lesson-guide p,
+.lesson-guide li,
+.formula-item li {
+  font-size: 14px;
+  line-height: 1.8;
+}
+
+.lesson-guide ol,
+.formula-item ol {
+  padding-left: 22px;
+}
+
+.lesson-guide li+li,
+.formula-item li+li {
+  margin-top: 8px;
+}
+
+.lesson-caution,
+.formula-note {
+  color: var(--muted);
+}
+
+.formula-item-heading {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  margin-bottom: 12px;
+}
+
+.formula-item-heading>div:last-child {
+  min-width: 0;
+}
+
+.case-diagram {
+  width: 116px;
+  flex-shrink: 0;
+}
+
+.case-diagram svg {
+  display: block;
+  width: 100%;
+}
+
+.case-diagram text {
+  fill: var(--ink);
+  font-size: 9px;
+  font-family: var(--body);
+}
+
+.formula-item .algorithm-text {
+  font-size: 16px;
+}
+
+.formula-item details {
+  margin-bottom: 14px;
+}
+
+.formula-item summary,
+.lesson-guide summary,
+.formula-explanation summary {
+  min-height: 44px;
+  padding: 8px 0;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.formula-source {
+  display: inline-block;
+  min-height: 44px;
+  padding: 8px 0;
+  font-size: 13px;
+}
+
+.formula-step-detail {
+  margin: 12px 0;
+  font-size: 14px;
+  line-height: 1.8;
+}
+
+.formula-explanation {
+  margin-bottom: 12px;
+}
+
+.formula-explanation p,
+.formula-explanation li {
+  font-size: 13px;
+}
+
+.formula-explanation ol {
+  max-height: 240px;
+  overflow: auto;
+  padding-left: 24px;
+}
+
+.formula-explanation li[aria-current=step] {
+  color: var(--ink);
+  background: var(--soft);
+}
+
+@media(max-width:600px) {
+  #formulaDialog[open] {padding: 16px;}
+  #formulaDialog>.dialog-heading h2 {font-size: 24px;}
+  #formulaDialog>p:first-of-type {font-size: 13px; margin-bottom: 10px;}
+  .formula-filters {gap: 8px; margin-bottom: 8px;}
+  .formula-filters label {flex-basis: 42%;}
+  .formula-filters .formula-search {flex-basis: 100%;}
+  .case-diagram {width: 88px;}
+  .formula-item-heading {gap: 12px;}
+  .lesson-guide {padding: 10px 4px;}
+}
+
 .formula-item {
   padding: 18px;
   background: var(--surface)

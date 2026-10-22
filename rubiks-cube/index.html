@@ -72,7 +72,9 @@
               </div><button id="exitDemo">退出演示</button>
             </div>
             <div id="formulaSteps" class="formula-steps" aria-label="公式步骤"></div>
-            <div class="player-controls"><button id="formulaPrev">上一步</button><button id="formulaPlay" class="lab-primary">播放</button><button id="formulaNext">下一步</button><button id="formulaReplay">重新播放</button><button id="formulaApply">应用到当前局面</button><span id="formulaProgress"></span></div>
+            <p id="formulaStepDetail" class="formula-step-detail" aria-live="polite"></p>
+            <details id="formulaExplanation" class="formula-explanation"><summary>识别与步骤详解</summary><p id="formulaRecognition"></p><ol id="formulaWalkthrough"></ol></details>
+            <div class="player-controls"><button id="formulaPrev">上一步</button><button id="formulaPlay" class="lab-primary">播放</button><button id="formulaNext">下一步</button><button id="formulaFirst">回到第一步</button><button id="formulaReplay">重新播放</button><button id="formulaApply">应用到当前局面</button><span id="formulaProgress"></span></div>
           </section>
           <div class="quick-controls"><button id="undoBtn">撤销</button><button id="redoBtn">重做</button>
             <div class="practice-status"><span>操作 <b id="moveCount">0</b></span><span id="solvedBadge" role="status">已还原</span></div>
@@ -119,10 +121,14 @@
   </div>
   <dialog id="formulaDialog" aria-labelledby="formulaDialogTitle">
     <div class="dialog-heading">
-      <h2 id="formulaDialogTitle">三阶公式手记</h2><button id="closeFormula">关闭</button>
+      <h2 id="formulaDialogTitle">公式与复原步骤</h2><button id="closeFormula">关闭</button>
     </div>
-    <p>选择公式，先在独立示例里看它如何转动。现有资料用于学习，不会自动求解任意局面。</p>
+    <p>三阶按CFOP学习，四阶先完成中心与合棱再降阶。先对照局面和拿法，再在独立示例中逐步体验。</p>
+    <div class="formula-filters"><label>阶数<select id="formulaSize"><option value="3">三阶 · CFOP</option><option value="4">四阶 · 降阶与CFOP</option></select></label><label>分组<select id="formulaGroup"></select></label><label class="formula-search">查找<input id="formulaSearch" type="search" placeholder="名称、编号、公式" autocomplete="off"></label></div>
+    <div id="formulaStage" class="formula-stage" role="group" aria-label="复原阶段"></div>
+    <p id="formulaResult" class="formula-result" role="status"></p>
     <div id="formulaCatalog" class="formula-catalog"></div>
+    <p class="formula-reference">编号可能与参考图不同，请按局面识别。<a href="./FORMULAS.md" target="_blank" rel="noopener">资料与记号说明</a></p>
   </dialog>
   <dialog id="helpDialog" aria-labelledby="helpTitle">
     <div class="dialog-heading">

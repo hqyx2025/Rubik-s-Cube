@@ -16,6 +16,10 @@ Adapted for 花前月下 in October 2026:
   and validated browser-local persistence. All 35 existing algorithm examples are retained.
 - Circular tracks are derived from actual axis rotations, projected into the plane.
   Each dot represents one sticker; fixed points on an axis are explicitly marked.
+- Added a complete 3x3 CFOP directory (41 F2L, 57 OLL, 21 PLL), cross guidance,
+  4x4 reduction and parity examples, model-generated case diagrams, Chinese
+  instruction text and step-by-step notation explanations. Algorithm references
+  and notation conventions are documented in FORMULAS.md.
 
 Visual explanation reference supplied by the user:
 GeoMath, 二维平面魔方原理解析, published 2026-07-11 on Douyin.

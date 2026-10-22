@@ -175,8 +175,9 @@ export function describeMove(m, size) {
       `${m.turns * -FACE[reference].sign > 0 ? '顺时针' : '逆时针'}90°`;
   return `${range} · ${m.lo===m.hi&&face?'':`从${FACE[reference].name}面看`}${direction}`;
 }
-export function parseFormula(text, size = 3) {
-  if (size !== 3) throw new Error('当前公式按三阶演示');
+export function parseFormula(text, size = 3, detailed = false) {
+  if (![3, 4].includes(size)) throw new Error('公式演示目前支持三阶与四阶');
+  text = text.replace(/[’′]/g, "'");
   let index = 0;
   const parse = inside => {
     const moves = [];
@@ -214,7 +215,9 @@ export function parseFormula(text, size = 3) {
         hi: size - 1,
         turns: -t
       };
-      else if (/[MES]/.test(letter)) move = {
+      else if (/[MES]/.test(letter)) {
+        if (size % 2 === 0) throw new Error('四阶无单一中层，请使用2R等内层记号，或Rw等宽层记号');
+        move = {
         axis: {
           M: 'x',
           E: 'y',
@@ -223,19 +226,28 @@ export function parseFormula(text, size = 3) {
         lo: 1,
         hi: 1,
         turns: t * (letter === 'S' ? -1 : 1)
-      };
-      else {
-        const width = depth ? Number(depth) : (wide || letter === letter.toLowerCase() ? 2 : 1);
-        if (width < 1 || width > size) throw new Error('公式层数超出三阶');
-        move = faceMove(letter.toUpperCase(), size, t, width);
+        };
       }
+      else {
+        const isWide = wide || letter === letter.toLowerCase(),
+          width = depth ? Number(depth) : isWide ? 2 : 1;
+        if (width < 1 || width > size) throw new Error('公式层数超出当前阶数');
+        move = faceMove(letter.toUpperCase(), size, t, width);
+        if (depth && !isWide) {
+          const layer = FACE[letter].sign > 0 ? size - width : width - 1;
+          move.lo = move.hi = layer;
+        }
+      }
+      if (detailed) move.token = match[0];
       moves.push(move);
       if (moves.length > 500) throw new Error('公式过长');
     }
     if (inside) throw new Error('公式括号未闭合');
     return moves;
   };
-  return parse(false);
+  const result = parse(false);
+  if (result.length > 500) throw new Error('公式过长');
+  return result;
 }
 export function validateState(state) {
   if (!state || !Number.isInteger(state.size) || state.size < 2 || state.size > 7 || !Array.isArray(state.stickers))
