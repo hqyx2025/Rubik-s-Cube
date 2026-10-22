@@ -119,7 +119,7 @@ export class CubeView {
       const p = this.camera.position,
         d = p.length(),
         az = Math.atan2(p.x, p.z) - dx * .007,
-        polar = Math.max(.15, Math.min(Math.PI - .15, Math.acos(Math.max(-1, Math.min(1, p.y / d))) + dy * .007));
+        polar = Math.max(.15, Math.min(Math.PI - .15, Math.acos(Math.max(-1, Math.min(1, p.y / d))) - dy * .007));
       p.set(d * Math.sin(polar) * Math.sin(az), d * Math.cos(polar), d * Math.sin(polar) * Math.cos(az));
       this.camera.up.set(0, 1, 0);
     } else {

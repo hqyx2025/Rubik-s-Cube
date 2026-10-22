@@ -13,6 +13,7 @@ import {
   inverse,
   solved,
   moveName,
+  describeMove,
   parseFormula,
   settleAngle,
   rotate,
@@ -35,6 +36,7 @@ let session = new CubeSession(3),
   view = 'circle',
   selected = null,
   selectedId = null,
+  lastAction = '尚未转动',
   active = null,
   animating = false,
   gesture = null,
@@ -57,6 +59,7 @@ try {
   if (savedRaw) {
     const data = JSON.parse(savedRaw);
     session = CubeSession.restore(data.session);
+    if (typeof data.lastAction === 'string' && data.lastAction.length <= 250) lastAction = data.lastAction;
     mode = data.mode === 'advanced' ? 'advanced' : 'simple';
     if (mode === 'simple' && session.state.size > 3) mode = 'advanced';
     view = data.view === 'net' ? 'net' : 'circle';
@@ -117,9 +120,10 @@ function save() {
   try {
     localStorage.setItem(storeKey, JSON.stringify({
       session: (saved?.session || session).serialize(),
+      lastAction: saved?.lastAction || lastAction,
       mode: saved?.mode || mode,
       view: saved?.view || view,
-      prefs,
+      prefs: saved?.prefs || prefs,
       camera: saved?.camera || cube?.capture(),
       flat: saved?.flat || flat.transforms
     }));
@@ -179,6 +183,8 @@ function ui() {
   }
   $('rangeInfo').textContent = wide ? `多层模式 · ${selectionLabel()}。范围外拖动不会改变所选范围。` : '普通拖动每次重新判断单层；面板选层仅用于按钮和键盘。';
   $('moveCount').textContent = session.steps;
+  const lastActionText = `上一步：${lastAction}`;
+  if ($('lastAction').textContent !== lastActionText) $('lastAction').textContent = lastActionText;
   $('solvedBadge').textContent = solved(state()) ? '已还原' : '探索中';
   $('undoBtn').disabled = busy || session.cursor === 0;
   $('redoBtn').disabled = busy || session.cursor === session.events.length;
@@ -258,8 +264,12 @@ function playerUI() {
     return s;
   }));
   $('formulaPlay').textContent = player.playing ? '暂停' : '播放';
-  $('formulaPrev').disabled = animating || player.index === 0;
-  $('formulaNext').disabled = animating || player.index >= player.moves.length;
+  $('formulaPlay').disabled = !!player.transitioning || !player.playing && player.index >= player.moves.length;
+  $('formulaPrev').disabled = animating || player.transitioning || player.index === 0;
+  $('formulaNext').disabled = animating || player.transitioning || player.index >= player.moves.length;
+  $('formulaReplay').disabled = !!player.transitioning;
+  $('exitDemo').disabled = !!player.transitioning;
+  $('formulaApply').disabled = !!player.transitioning;
   $('formulaApply').hidden = !player.restore;
   $('formulaProgress').textContent = `${player.index} / ${player.moves.length}`;
 }
@@ -378,6 +388,7 @@ async function pump() {
     await animate(move);
     session.commit([move], moveName(move, state().size), move.lo === 0 && move.hi === state().size - 1 ? 'turn' :
       'manual');
+    lastAction = describeMove(move, state().size);
     active = null;
     save();
     ui();
@@ -680,8 +691,10 @@ async function up(e, surface, cancel = false) {
     }
     await animate(move, g.angle, target * Math.PI / 180, 180);
     active = null;
-    if (target) session.commit([move], moveName(move, state().size), move.lo === 0 && move.hi === state().size - 1 ?
-      'turn' : 'manual');
+    if (target) {
+      session.commit([move], moveName(move, state().size), move.lo === 0 && move.hi === state().size - 1 ? 'turn' : 'manual');
+      lastAction = describeMove(move, state().size);
+    }
     save();
     ui();
   } else if (g.kind === 'pending' && !cancel) {
@@ -714,7 +727,7 @@ for (const [id, surface] of [
   });
 }
 
-async function seek(target) {
+async function seek(target, action = '回到') {
   if (player || animating || gesture) return;
   if (historyJob) {
     toast('请先完成当前回看。');
@@ -727,8 +740,11 @@ async function seek(target) {
       inverse));
   else
     for (let i = session.cursor; i < target; i++) moves.push(...session.events[i].moves);
+  const event = session.events[action === '撤销' ? session.cursor - 1 : session.cursor],
+    label = event?.moves.length === 1 ? describeMove(event.moves[0], state().size) : event?.label || '转动';
   historyJob = {
     target,
+    lastAction: action === '回到' ? `回到第${target}条记录` : `${action} · ${label}`,
     moves,
     index: 0,
     working: cloneState(session.state),
@@ -753,6 +769,7 @@ async function runHistory() {
   job.running = false;
   if (historyJob === job && job.index === job.moves.length) {
     session.seek(job.target);
+    lastAction = job.lastAction;
     historyJob = null;
     save();
     ui();
@@ -772,19 +789,21 @@ $('historyJump').onclick = async () => {
   await boundary();
   if (historyJob === job) {
     session.seek(job.target);
+    lastAction = job.lastAction;
     historyJob = null;
     active = null;
     save();
     ui();
   }
 };
-$('undoBtn').onclick = () => seek(session.cursor - 1);
-$('redoBtn').onclick = () => seek(session.cursor + 1);
+$('undoBtn').onclick = () => seek(session.cursor - 1, '撤销');
+$('redoBtn').onclick = () => seek(session.cursor + 1, '重做');
 
 async function newGame(size) {
   await boundary();
   queue = [];
   session = new CubeSession(size);
+  lastAction = `新开${size}阶魔方`;
   selected = null;
   selectedId = null;
   $('wideMode').checked = false;
@@ -868,6 +887,7 @@ $('scrambleBtn').onclick = async () => {
       historyJob = null;
       active = null;
       if (completed.length) session.commit(completed, `打乱 · 已完成${completed.length}步`, 'scramble');
+      lastAction = `打乱 · 已完成${completed.length}步`;
       save();
       ui();
       toast('打乱已暂停，保留完成的步骤，可整次撤销。');
@@ -876,6 +896,7 @@ $('scrambleBtn').onclick = async () => {
   }
   historyJob = null;
   session.commit(moves, `打乱 · ${moves.length}步`, 'scramble');
+  lastAction = `打乱 · ${moves.length}步（可一次撤销）`;
   save();
   ui();
 };
@@ -1010,8 +1031,13 @@ async function startDemo(formula) {
     view,
     selected,
     selectedId,
+    lastAction,
     camera: cube?.capture(),
-    flat: structuredClone(flat.transforms)
+    flat: structuredClone(flat.transforms),
+    prefs: {...prefs},
+    controls: Object.fromEntries(['axisSelect', 'layerStart', 'layerEnd'].map(id => [id, $(id).value])),
+    wide: $('wideMode').checked,
+    scroll: {x: scrollX, y: scrollY}
   };
   session = new CubeSession(3);
   for (const m of moves.slice().reverse()) session.state = applyMove(session.state, inverse(m));
@@ -1021,11 +1047,14 @@ async function startDemo(formula) {
     moves,
     index: 0,
     playing: false,
+    initial: structuredClone(session.serialize()),
     restore
   };
   mode = 'advanced';
   selected = null;
   selectedId = null;
+  $('wideMode').checked = false;
+  lastAction = '示例 · 尚未播放';
   cube?.home(3);
   ui();
   $('formulaPlayer').scrollIntoView({
@@ -1034,59 +1063,102 @@ async function startDemo(formula) {
   });
 }
 async function playerStep(dir) {
-  if (!player || animating) return;
+  if (!player || animating || player.transitioning || player.step) return;
   const p = player;
+  p.step = performPlayerStep(p, dir);
+  ui();
+  try {
+    await p.step;
+  } finally {
+    p.step = null;
+  }
+}
+async function performPlayerStep(p, dir) {
   if (dir > 0 && p.index < p.moves.length) {
     const m = p.moves[p.index];
     await animate(m);
     session.commit([m], moveName(m, 3), p.restore ? 'turn' : 'formula');
     p.index++;
+    lastAction = `${p.restore?'示例':'公式'} · ${describeMove(m, 3)}`;
   } else if (dir < 0 && p.index > 0) {
     const m = inverse(p.moves[p.index - 1]);
     await animate(m);
     session.seek(session.cursor - 1);
     p.index--;
+    lastAction = `${p.restore?'示例':'公式'} · 上一步 · ${describeMove(m, 3)}`;
   }
   active = null;
   ui();
   save();
 }
 async function play() {
-  if (!player) return;
+  if (!player || player.transitioning) return;
   if (player.playing) {
     player.playing = false;
     ui();
     return;
   }
   if (animating) await boundary();
-  if (!player) return;
+  if (!player || player.transitioning) return;
   const p = player;
   p.playing = true;
   ui();
-  if (!p.playing || p.running) return;
-  p.running = true;
-  try {
-    while (player === p && p.playing && p.index < p.moves.length) await playerStep(1);
-  } finally {
-    p.running = false;
-    if (player === p) {
-      p.playing = false;
-      ui();
+  if (!p.playing || p.run) return;
+  p.run = (async () => {
+    try {
+      while (player === p && p.playing && !p.transitioning && p.index < p.moves.length) await playerStep(1);
+    } finally {
+      if (player === p) {
+        p.playing = false;
+        ui();
+      }
     }
+  })();
+  try {
+    await p.run;
+  } finally {
+    p.run = null;
   }
 }
-async function exitPlayer() {
-  if (!player) return;
-  const p = player;
+async function stopPlayer(p) {
   p.playing = false;
   await boundary();
+  await p.step;
+  await p.run;
+}
+async function replayPlayer() {
+  const p = player;
+  if (!p || p.transitioning) return;
+  p.transitioning = true;
+  ui();
+  await stopPlayer(p);
+  if (player !== p) return;
+  session = CubeSession.restore(p.initial);
+  p.index = 0;
+  lastAction = `${p.restore?'示例':'公式'} · 从头播放`;
+  p.transitioning = false;
+  active = null;
+  ui();
+  save();
+  play();
+}
+async function exitPlayer() {
+  if (!player || player.transitioning) return;
+  const p = player;
+  p.transitioning = true;
+  ui();
+  await stopPlayer(p);
   if (p.restore) {
     session = p.restore.session;
     mode = p.restore.mode;
     view = p.restore.view;
     selected = p.restore.selected;
     selectedId = p.restore.selectedId;
+    lastAction = p.restore.lastAction;
     flat.transforms = p.restore.flat;
+    Object.assign(prefs, p.restore.prefs);
+    flat.focusAxis = prefs.axisFocus;
+    $('wideMode').checked = p.restore.wide;
     flat.setKind(view);
     if (cube) cube.restore(p.restore.camera, session.state.size);
   }
@@ -1094,6 +1166,10 @@ async function exitPlayer() {
   active = null;
   save();
   ui();
+  if (p.restore) {
+    for (const [id, value] of Object.entries(p.restore.controls)) $(id).value = value;
+    scrollTo(p.restore.scroll.x, p.restore.scroll.y);
+  }
 }
 $('formulaBtn').onclick = async () => {
   await boundary();
@@ -1110,6 +1186,7 @@ $('formulaPrev').onclick = () => {
   playerStep(-1);
 };
 $('formulaPlay').onclick = play;
+$('formulaReplay').onclick = replayPlayer;
 $('exitDemo').onclick = exitPlayer;
 $('formulaApply').onclick = async () => {
   if (!player?.restore) return;
@@ -1134,6 +1211,7 @@ $('formulaApply').onclick = async () => {
     moves: p.moves,
     index: 0,
     playing: false,
+    initial: structuredClone(session.serialize()),
     restore: null
   };
   ui();
@@ -1276,7 +1354,13 @@ globalThis.cubeLab = Object.freeze({
       history: session.serialize(),
       playing: !!player?.playing,
       demonstration: !!player?.restore,
-      historyPreview: !!historyJob
+      historyPreview: !!historyJob,
+      camera: cube?.capture(),
+      flat: structuredClone(flat.transforms),
+      prefs: {...prefs},
+      wide: $('wideMode').checked,
+      selectedId,
+      lastAction
     };
   },
   get input() {

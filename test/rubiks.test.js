@@ -1,8 +1,33 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
-import {createState,applyMove,faceMove,inverse,solved,parseFormula,validateState,projection,orbitPoint,cellOf,settleAngle,affects} from '../rubiks-cube/model.js';
+import {readFileSync} from 'node:fs';
+import {runInNewContext} from 'node:vm';
+import {CubeView} from '../rubiks-cube/views.js';
+import {createState,applyMove,faceMove,inverse,solved,parseFormula,validateState,projection,orbitPoint,cellOf,settleAngle,affects,describeMove} from '../rubiks-cube/model.js';
 import {CubeSession} from '../rubiks-cube/session.js';
 import {buildOrbits,orbitKey,distanceToPath} from '../rubiks-cube/model.js';
+
+test('simple and advanced camera drags have matching directions while simple stays upright',()=>{
+  const context={};runInNewContext(readFileSync(new URL('../rubiks-cube/vendor/three.min.js',import.meta.url),'utf8'),context);
+  const T=context.THREE;
+  const make=()=>{const v=Object.create(CubeView.prototype);v.T=T;v.camera=new T.PerspectiveCamera(38,1,.1,200);v.draw=()=>{};v.home(3);return v;};
+  for(const [dx,dy] of [[0,20],[0,-20],[20,0],[-20,0]]){
+    const simple=make(),advanced=make(),before=simple.camera.position.clone();simple.orbit(dx,dy,'simple');advanced.orbit(dx,dy,'advanced');
+    for(const key of ['x','y','z'])assert.ok(Math.abs(simple.camera.position[key]-advanced.camera.position[key])<1e-8,`${dx}/${dy}/${key} direction diverged`);
+    if(dy)assert.equal(Math.sign(simple.camera.position.y-before.y),Math.sign(dy));
+  }
+  const v=make();for(let i=0;i<100;i++)v.orbit(13,40,'simple');assert.ok(v.camera.up.equals(new T.Vector3(0,1,0)));assert.ok(Math.abs(v.camera.position.y/v.camera.position.length())<1);
+});
+
+test('last-action descriptions use the indicated face as the rotation reference',()=>{
+  for(const face of ['U','D','L','R','F','B']){
+    assert.ok(describeMove(faceMove(face,3),3).includes('顺时针90°'));
+    assert.ok(describeMove(faceMove(face,3,-1),3).includes('逆时针90°'));
+    assert.ok(describeMove(faceMove(face,3,2),3).includes('半圈180°'));
+  }
+  assert.equal(describeMove({axis:'x',lo:1,hi:3,turns:-1},5),'X轴第2～4层 · 从右面看顺时针90°');
+  assert.equal(describeMove({axis:'y',lo:0,hi:4,turns:2},5),'Y轴整块 · 从上面看半圈180°');
+});
 
 test('every order, axis and contiguous slice preserves sticker identity and inverse moves',()=>{
   for(let size=2;size<=7;size++){
@@ -50,9 +75,18 @@ test('history supports atomic scramble undo, branching and verified local recove
   const mismatch=structuredClone(session.serialize());mismatch.cursor=0;assert.throws(()=>CubeSession.restore(mismatch));
 });
 test('release thresholds and cancelled gestures do not manufacture extra turns',()=>{
-  assert.equal(settleAngle(44),0);assert.equal(settleAngle(46),90);assert.equal(settleAngle(134),90);assert.equal(settleAngle(136),180);
+  assert.equal(settleAngle(44),0);assert.equal(settleAngle(46),90);assert.equal(settleAngle(134),90);assert.equal(settleAngle(136),90);
   assert.equal(settleAngle(20,150),90);assert.equal(settleAngle(8,150),0);assert.equal(settleAngle(170,300),180);assert.equal(settleAngle(-170,-300),-180);
   const state=createState(7),move={axis:'x',lo:1,hi:4,turns:1};assert.ok(state.stickers.some(t=>affects(t,move,7)));assert.equal(validateState({...state,stickers:state.stickers.slice(1)}),false);
+});
+
+test('release favors quarter turns and only deliberate 160-degree travel allows a half turn',()=>{
+  for(const sign of [-1,1]){
+    for(const angle of [45,80,90,110,135,150,159.9])for(const speed of [0,150,900,4000])assert.equal(settleAngle(sign*angle,sign*speed),sign*90);
+    for(const angle of [160,170,180])for(const speed of [0,150,900])assert.equal(settleAngle(sign*angle,sign*speed),sign*180);
+    assert.equal(settleAngle(sign*20,sign*200),sign*90);assert.equal(settleAngle(sign*8,sign*200),0);
+    assert.equal(settleAngle(sign*170,-sign*200),sign*90);assert.equal(settleAngle(sign*80,-sign*200),0);
+  }
 });
 test('long histories checkpoint old moves without losing current state or count',()=>{
   const session=new CubeSession(2),move=faceMove('R',2);for(let i=0;i<2004;i++)session.commit([move],'R');

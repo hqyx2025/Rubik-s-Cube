@@ -164,6 +164,17 @@ export function moveName(m, size) {
   }
   return `${m.axis.toUpperCase()} 第${m.lo+1}${m.hi===m.lo?'':'～'+(m.hi+1)}层 ${Math.abs(m.turns)*90}°${m.turns>0?'正向':'反向'}`;
 }
+export function describeMove(m, size) {
+  const face = FACES.find(f => FACE[f].axis === AXES.indexOf(m.axis) &&
+    (FACE[f].sign === 1 ? m.hi === size - 1 : m.lo === 0)),
+    reference = face || {x:'R', y:'U', z:'F'}[m.axis],
+    range = m.lo === 0 && m.hi === size - 1 ? `${m.axis.toUpperCase()}轴整块` :
+      m.lo === m.hi && face ? `${FACE[face].name}面 ${face}` :
+      `${m.axis.toUpperCase()}轴第${m.lo+1}${m.lo===m.hi?'':'～'+(m.hi+1)}层`,
+    direction = Math.abs(m.turns) === 2 ? '半圈180°' :
+      `${m.turns * -FACE[reference].sign > 0 ? '顺时针' : '逆时针'}90°`;
+  return `${range} · ${m.lo===m.hi&&face?'':`从${FACE[reference].name}面看`}${direction}`;
+}
 export function parseFormula(text, size = 3) {
   if (size !== 3) throw new Error('当前公式按三阶演示');
   let index = 0;
@@ -329,8 +340,14 @@ export function netPoint(t, size) {
   return [(x * size + col + .5) * 32, (y * size + row + .5) * 32];
 }
 export function settleAngle(angle, velocity = 0) {
-  const flick = Math.abs(angle) > 12 && Math.abs(velocity) >= 135;
-  let target = Math.round(angle / 90) * 90;
-  if (flick) target += Math.sign(velocity) * 90;
-  return Math.max(-180, Math.min(180, target));
+  const distance = Math.abs(angle), sign = Math.sign(angle),
+    flick = distance > 12 && Math.abs(velocity) >= 135;
+  // Most gestures mean a quarter turn. A half turn needs deliberate travel,
+  // and a fast release must not promote an ordinary 90° drag to 180°.
+  let target = distance >= 160 ? 180 : distance >= 45 ? 90 : 0;
+  if (flick) {
+    if (Math.sign(velocity) === sign) target = Math.max(90, target);
+    else target = Math.max(0, target - 90);
+  }
+  return sign * target || 0;
 }

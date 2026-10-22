@@ -72,11 +72,12 @@
               </div><button id="exitDemo">退出演示</button>
             </div>
             <div id="formulaSteps" class="formula-steps" aria-label="公式步骤"></div>
-            <div class="player-controls"><button id="formulaPrev">上一步</button><button id="formulaPlay" class="lab-primary">播放</button><button id="formulaNext">下一步</button><button id="formulaApply">应用到当前局面</button><span id="formulaProgress"></span></div>
+            <div class="player-controls"><button id="formulaPrev">上一步</button><button id="formulaPlay" class="lab-primary">播放</button><button id="formulaNext">下一步</button><button id="formulaReplay">重新播放</button><button id="formulaApply">应用到当前局面</button><span id="formulaProgress"></span></div>
           </section>
           <div class="quick-controls"><button id="undoBtn">撤销</button><button id="redoBtn">重做</button>
             <div class="practice-status"><span>操作 <b id="moveCount">0</b></span><span id="solvedBadge" role="status">已还原</span></div>
           </div>
+          <p id="lastAction" class="last-action" role="status" aria-live="polite" aria-atomic="true">上一步：尚未转动</p>
           <div class="manual-controls" aria-label="选面与转动">
             <div class="face-controls" role="group" aria-label="选择外侧面"><span>面</span><button data-face="U">上 U</button><button data-face="D">下 D</button><button data-face="L">左 L</button><button data-face="R">右 R</button><button data-face="F">前 F</button><button data-face="B">后 B</button></div>
             <div class="turn-controls"><button id="ccwBtn">逆时针</button><button id="cwBtn">顺时针</button><button id="halfBtn">半圈</button></div>
