@@ -1606,3 +1606,20 @@ body.immersive {
   .immersive #immersiveView {max-width: 145px; padding-right: 22px;}
   .immersive #helpBtn {display: none;}
 }
+
+.lab-wrap {
+  --cube-base-height: clamp(340px, 32vw, 460px);
+}
+
+.immersive .lab-wrap {
+  --cube-base-height: clamp(320px, calc(100dvh - 500px), 900px);
+}
+
+#cubeStage {
+  height: calc(var(--cube-base-height) + var(--cube-reclaimed-height, 0px));
+}
+
+@media(max-width:850px) {
+  .lab-wrap {--cube-base-height: clamp(300px, 75vw, 460px);}
+  .immersive .lab-wrap {--cube-base-height: clamp(280px, 45dvh, 600px);}
+}

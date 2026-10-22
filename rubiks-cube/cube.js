@@ -103,7 +103,7 @@ if (flatSaved)
   }
 const state = () => historyJob?.working || session.state;
 
-let immersive = false, immersiveScroll;
+let immersive = false, immersiveScroll, practiceLayoutFrame = 0;
 const immersiveControls = [$('formulaPlayer'), $('practicePanel')]
   .map(el => {
     const marker = document.createComment('immersive control position');
@@ -118,7 +118,7 @@ function placeImmersiveControls() {
   }
   $('immersiveConsole').hidden = !rightOnly;
   document.body.dataset.immersiveView = $('immersiveView').value;
-  requestAnimationFrame(() => cube?.resize());
+  schedulePracticeLayout();
 }
 function showImmersive(on) {
   if (immersive === on) return;
@@ -206,9 +206,32 @@ function timerTick() {
   const text=formatElapsed(practiceTimer.elapsed());
   if($('timerValue').textContent!==text)$('timerValue').textContent=text;
 }
+function schedulePracticeLayout() {
+  if(practiceLayoutFrame)return;
+  practiceLayoutFrame=requestAnimationFrame(()=>{
+    practiceLayoutFrame=0;
+    const stage=$('cubeStage'),body=$('practiceBody');
+    stage.style.setProperty('--cube-reclaimed-height','0px');
+    const bounds=stage.getBoundingClientRect();
+    if(controlsCollapsed&&bounds.width>0){
+      const hidden=body.hidden;
+      body.hidden=false;
+      const freed=body.getBoundingClientRect().height;
+      body.hidden=hidden;
+      // Give the useful portion of the folded controls' space to the cube.
+      // A square/viewport limit keeps a narrow or short screen from gaining empty canvas.
+      const limit=Math.max(bounds.height,Math.min(bounds.width,innerHeight*.75)),
+        extra=Math.max(0,Math.min(freed,limit-bounds.height));
+      stage.style.setProperty('--cube-reclaimed-height',`${extra}px`);
+    }
+    cube?.resize();
+  });
+}
+addEventListener('resize',schedulePracticeLayout);
 function practiceUI() {
   $('practiceBody').hidden=controlsCollapsed;
   $('practiceToggle').textContent=controlsCollapsed?'展开面板':'收起面板';
+  $('practiceToggle').title=controlsCollapsed?'展开操作控制，恢复原画布大小':'收起操作控制，扩大三维魔方画布';
   $('practiceToggle').setAttribute('aria-expanded',String(!controlsCollapsed));
   const phase=practiceTimer.status;
   $('timerStart').textContent=phase==='paused'?'继续计时':phase==='ended'?'重新计时':phase==='running'?'计时中':'开始计时';
@@ -217,6 +240,7 @@ function practiceUI() {
   $('timerEnd').disabled=!!player||phase==='idle'||phase==='ended';
   $('timerState').textContent=player?'演示中 · 计时暂停':{idle:'未开始',running:'计时中',paused:'已暂停',ended:'已结束'}[phase];
   timerTick();
+  schedulePracticeLayout();
 }
 $('practiceToggle').onclick=()=>{
   if(!controlsCollapsed&&$('practiceBody').contains(document.activeElement))$('practiceToggle').focus();
