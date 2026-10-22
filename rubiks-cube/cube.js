@@ -30,13 +30,15 @@ import {
 import {mountCatalog} from './catalog.js';
 import {exampleFor, recognition, stepExplanation} from './curriculum.js';
 import {formulaTargets, targetProgress} from './targets.js';
+import {PracticeTimer, formatElapsed} from './timer.js';
 
 const $ = id => document.getElementById(id),
   storeKey = 'rubiks-lab-v2',
   playbackRates = [0.25, 0.5, 0.75, 1, 1.25, 1.5],
   clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 let session = new CubeSession(3),
-  mode = 'simple',
+  practiceTimer = new PracticeTimer(),
+  controlsCollapsed = false,
   view = 'circle',
   selected = null,
   selectedId = null,
@@ -64,10 +66,10 @@ try {
   if (savedRaw) {
     const data = JSON.parse(savedRaw);
     session = CubeSession.restore(data.session);
+    practiceTimer = PracticeTimer.restore(data.timer);
+    controlsCollapsed = data.controlsCollapsed === true;
     if (playbackRates.includes(data.formulaRate)) formulaRate = data.formulaRate;
     if (typeof data.lastAction === 'string' && data.lastAction.length <= 250) lastAction = data.lastAction;
-    mode = data.mode === 'advanced' ? 'advanced' : 'simple';
-    if (mode === 'simple' && session.state.size > 3) mode = 'advanced';
     view = data.view === 'net' ? 'net' : 'circle';
     if (['smooth', 'slow', 'off'].includes(data.prefs?.motion)) prefs.motion = data.prefs.motion;
     if (Number.isFinite(data.prefs?.sensitivity)) prefs.sensitivity = clamp(data.prefs.sensitivity, .5, 2);
@@ -102,7 +104,7 @@ if (flatSaved)
 const state = () => historyJob?.working || session.state;
 
 let immersive = false, immersiveScroll;
-const immersiveControls = [$('formulaPlayer'), $('undoBtn').parentElement, $('lastAction'), document.querySelector('.manual-controls')]
+const immersiveControls = [$('formulaPlayer'), $('practicePanel')]
   .map(el => {
     const marker = document.createComment('immersive control position');
     el.before(marker);
@@ -179,7 +181,9 @@ function save() {
       session: (saved?.session || session).serialize(),
       lastAction: saved?.lastAction || lastAction,
       formulaRate,
-      mode: saved?.mode || mode,
+      timer: practiceTimer.serialize(),
+      controlsCollapsed,
+      mode: 'advanced',
       view: saved?.view || view,
       prefs: saved?.prefs || prefs,
       camera: saved?.camera || cube?.capture(),
@@ -197,6 +201,33 @@ function laterSave() {
   clearTimeout(saveTimer);
   saveTimer = setTimeout(save, 250);
 }
+
+function timerTick() {
+  const text=formatElapsed(practiceTimer.elapsed());
+  if($('timerValue').textContent!==text)$('timerValue').textContent=text;
+}
+function practiceUI() {
+  $('practiceBody').hidden=controlsCollapsed;
+  $('practiceToggle').textContent=controlsCollapsed?'展开面板':'收起面板';
+  $('practiceToggle').setAttribute('aria-expanded',String(!controlsCollapsed));
+  const phase=practiceTimer.status;
+  $('timerStart').textContent=phase==='paused'?'继续计时':phase==='ended'?'重新计时':phase==='running'?'计时中':'开始计时';
+  $('timerStart').disabled=!!player||phase==='running';
+  $('timerPause').disabled=!!player||phase!=='running';
+  $('timerEnd').disabled=!!player||phase==='idle'||phase==='ended';
+  $('timerState').textContent=player?'演示中 · 计时暂停':{idle:'未开始',running:'计时中',paused:'已暂停',ended:'已结束'}[phase];
+  timerTick();
+}
+$('practiceToggle').onclick=()=>{
+  if(!controlsCollapsed&&$('practiceBody').contains(document.activeElement))$('practiceToggle').focus();
+  controlsCollapsed=!controlsCollapsed;
+  practiceUI();save();
+};
+for(const [id,action] of [['timerStart','start'],['timerPause','pause'],['timerEnd','end']])$(id).onclick=()=>{
+  if(player)return;
+  practiceTimer[action]();practiceUI();save();
+};
+setInterval(timerTick,50);
 
 function frame() {
   const ids = player?.targets?.stickerIds || [];
@@ -225,11 +256,9 @@ function selectionLabel(s = selected) {
 function ui() {
   const n = state().size,
     busy = animating || !!historyJob || !!player,
-    wide = $('wideMode').checked && mode === 'advanced';
-  $('modeSelect').value = mode;
+    wide = $('wideMode').checked;
+  practiceUI();
   $('sizeSelect').value = n;
-  for (const option of $('sizeSelect').options) option.disabled = mode === 'simple' && Number(option.value) > 3;
-  $('advancedControls').hidden = mode !== 'advanced';
   $('layerEndLabel').hidden = !wide;
   $('exitWideBtn').hidden = !wide;
   $('layerEnd').disabled = !wide;
@@ -256,7 +285,6 @@ function ui() {
   $('scrambleBtn').disabled = busy;
   $('resetBtn').disabled = !!historyJob || !!player;
   $('sizeSelect').disabled = !!historyJob || !!player;
-  $('modeSelect').disabled = !!historyJob || !!player;
   $('selectionInfo').textContent = player ? '演示中可拖动三维换视角、拖动二维平移；双指或滚轮缩放。' : selectionLabel();
   $('turnMotion').value = prefs.motion;
   $('sensitivity').value = prefs.sensitivity;
@@ -503,21 +531,16 @@ const pairInfo = p => ({
   d: Math.hypot(p[0].x - p[1].x, p[0].y - p[1].y)
 });
 
-function permitted(sticker, axis) {
-  const layer = layerOf(sticker, axis, state().size);
-  return mode === 'advanced' || layer === 0 || layer === state().size - 1;
-}
-
 function tangent(surface, t, axis) {
   return surface === 'three' ? cube?.tangent(t, axis) || [0, 0] : flat.tangent(t, axis);
 }
 
 function candidates(g, dx, dy) {
-  const wide = mode === 'advanced' && $('wideMode').checked,
+  const wide = $('wideMode').checked,
     axes = wide && selected ? [selected.axis] : g.hit.orbitAxis ? [g.hit.orbitAxis] : g.surface === 'flat' && view ===
     'circle' && flat.focusAxis !== 'all' ? [flat.focusAxis] : AXES;
   const len = Math.hypot(dx, dy);
-  return axes.filter(axis => permitted(g.hit.sticker, axis) && (g.surface === 'flat' && view === 'circle' || g.hit
+  return axes.filter(axis => (g.surface === 'flat' && view === 'circle' || g.hit
     .sticker.n[AXES.indexOf(axis)] === 0)).map(axis => {
     const l = layerOf(g.hit.sticker, axis, state().size),
       v = tangent(g.surface, g.hit.sticker, axis),
@@ -654,7 +677,7 @@ function movePointer(e, surface) {
     const v = pairInfo(p),
       prior = g.pair;
     if (surface === 'three') {
-      cube?.orbit(v.x - prior.x, v.y - prior.y, mode);
+      cube?.orbit(v.x - prior.x, v.y - prior.y);
       if (prior.d > 3 && v.d > 3) cube?.zoom(prior.d / v.d);
     } else {
       flat.pan(v.x - prior.x, v.y - prior.y);
@@ -670,7 +693,7 @@ function movePointer(e, surface) {
   g.lastX = e.clientX;
   g.lastY = e.clientY;
   if (g.kind === 'orbit') {
-    cube?.orbit(dx, dy, mode);
+    cube?.orbit(dx, dy);
     laterSave();
     return;
   }
@@ -686,7 +709,7 @@ function movePointer(e, surface) {
     const options = candidates(g, x, y),
       best = options[0];
     if (!best || best.score < .766 || (options[1] && best.score - options[1].score < .15)) {
-      $('selectionInfo').textContent = mode === 'simple' ? '方向还不明确；可从边缘色块起手，或用面按钮选择。' : '方向还不明确，沿其中一条候选方向继续拖动。';
+      $('selectionInfo').textContent = '方向还不明确，沿其中一条候选方向继续拖动。';
       return;
     }
     g.kind = 'turn';
@@ -890,6 +913,7 @@ async function newGame(size) {
   await boundary();
   queue = [];
   session = new CubeSession(size);
+  practiceTimer.reset();
   lastAction = `新开${size}阶魔方`;
   selected = null;
   selectedId = null;
@@ -902,35 +926,17 @@ async function newGame(size) {
 }
 $('resetBtn').onclick = async () => {
   await boundary();
-  if (session.events.length && !await ask('重置当前魔方？', '当前练习局面和步骤会被清除，回到同阶还原态。', '重置')) return;
+  if ((session.events.length||practiceTimer.elapsed()>0) && !await ask('重置当前魔方？', '当前练习局面、步骤和本局计时会被清除，回到同阶还原态。', '重置')) return;
   newGame(state().size);
 };
 $('sizeSelect').onchange = async e => {
   const n = Number(e.target.value);
   await boundary();
-  if (session.events.length && !await ask('更换阶数？', '更换阶数会新开一局，清除当前练习进度。', '换阶')) {
+  if ((session.events.length||practiceTimer.elapsed()>0) && !await ask('更换阶数？', '更换阶数会新开一局，清除当前练习进度和本局计时。', '换阶')) {
     ui();
     return;
   }
   newGame(n);
-};
-$('modeSelect').onchange = async e => {
-  const next = e.target.value;
-  await boundary();
-  if (next === 'simple' && state().size > 3) {
-    if (!await ask('进入简单模式？', '简单模式支持2～3阶。你可以留在进阶保留这局，或确认新开三阶局。', '新开三阶局')) {
-      ui();
-      return;
-    }
-    mode = next;
-    await newGame(3);
-  } else {
-    mode = next;
-    $('wideMode').checked = false;
-    if (mode === 'simple') cube?.orbit(0, 0, 'simple');
-    save();
-    ui();
-  }
 };
 $('scrambleBtn').onclick = async () => {
   if (animating || pumping || gesture || historyJob || player) return;
@@ -941,7 +947,7 @@ $('scrambleBtn').onclick = async () => {
   for (let i = 0; i < Math.min(40, 8 * size); i++) {
     const axes = AXES.filter(a => a !== prior),
       axis = axes[Math.floor(Math.random() * axes.length)],
-      layer = mode === 'simple' ? (Math.random() < .5 ? 0 : size - 1) : Math.floor(Math.random() * size);
+      layer = Math.floor(Math.random() * size);
     moves.push({
       axis,
       lo: layer,
@@ -1076,9 +1082,9 @@ async function startDemo(formula) {
     return;
   }
   $('formulaDialog').close();
+  if(practiceTimer.pause())save();
   const restore = {
     session,
-    mode,
     view,
     selected,
     selectedId,
@@ -1104,7 +1110,6 @@ async function startDemo(formula) {
     initial: structuredClone(session.serialize()),
     restore
   };
-  mode = 'advanced';
   selected = null;
   selectedId = null;
   $('wideMode').checked = false;
@@ -1208,7 +1213,6 @@ async function exitPlayer() {
   await stopPlayer(p);
   if (p.restore) {
     session = p.restore.session;
-    mode = p.restore.mode;
     view = p.restore.view;
     selected = p.restore.selected;
     selectedId = p.restore.selectedId;
@@ -1267,12 +1271,11 @@ $('formulaApply').onclick = async () => {
     return;
   }
   const inner = p.moves.some(m => m.lo === m.hi && m.lo === 1 || m.lo !== m.hi);
-  if (!await ask('应用到当前局面？', `将对你的${p.size}阶局面执行${p.moves.length}步${inner?'，并进入进阶模式':''}。这不保证复原；完成动作可从历史撤销。`, '应用公式'))
+  if (!await ask('应用到当前局面？', `将对你的${p.size}阶局面执行${p.moves.length}步${inner?'，其中含内层或多层转动':''}。这不保证复原；完成动作可从历史撤销。`, '应用公式'))
     return;
   if (original.session.cursor !== original.session.events.length && !await branchAllowedFor(original.session))
     return;
   await exitPlayer();
-  mode = inner ? 'advanced' : mode;
   player = {
     name: p.name,
     id: p.id,
@@ -1321,7 +1324,7 @@ document.addEventListener('keydown', e => {
     $('redoBtn').click();
     return;
   }
-  if (e.altKey || e.ctrlKey || e.metaKey || mode !== 'advanced' || animating || player || historyJob) return;
+  if (e.altKey || e.ctrlKey || e.metaKey || animating || player || historyJob) return;
   const key = e.key.toLowerCase(),
     n = state().size;
   if (/^[1-7]$/.test(key) && Number(key) <= n) {
@@ -1418,11 +1421,11 @@ globalThis.cubeLab = Object.freeze({
   get snapshot() {
     return {
       state: cloneState(state()),
+      mode: 'advanced',
       active: active ? {
         ...active
       } : null,
-      mode,
-      view,
+        view,
       selection: selected ? {
         ...selected
       } : null,
@@ -1437,6 +1440,8 @@ globalThis.cubeLab = Object.freeze({
       selectedId,
       lastAction,
       formulaRate,
+      timer: practiceTimer.serialize(),
+      controlsCollapsed,
       demoTargets: player?.targets ? {
         ...targetProgress(player.targets,state()),
         rule:player.targets.rule,

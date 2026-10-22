@@ -7,16 +7,17 @@ import {createState,applyMove,faceMove,inverse,solved,parseFormula,validateState
 import {CubeSession} from '../rubiks-cube/session.js';
 import {buildOrbits,orbitKey,distanceToPath} from '../rubiks-cube/model.js';
 
-test('simple and advanced camera drags have matching directions while simple stays upright',()=>{
+test('unified free camera preserves its radius, drag direction and allows flipping',()=>{
   const context={};runInNewContext(readFileSync(new URL('../rubiks-cube/vendor/three.min.js',import.meta.url),'utf8'),context);
   const T=context.THREE;
   const make=()=>{const v=Object.create(CubeView.prototype);v.T=T;v.camera=new T.PerspectiveCamera(38,1,.1,200);v.draw=()=>{};v.home(3);return v;};
   for(const [dx,dy] of [[0,20],[0,-20],[20,0],[-20,0]]){
-    const simple=make(),advanced=make(),before=simple.camera.position.clone();simple.orbit(dx,dy,'simple');advanced.orbit(dx,dy,'advanced');
-    for(const key of ['x','y','z'])assert.ok(Math.abs(simple.camera.position[key]-advanced.camera.position[key])<1e-8,`${dx}/${dy}/${key} direction diverged`);
-    if(dy)assert.equal(Math.sign(simple.camera.position.y-before.y),Math.sign(dy));
+    const v=make(),before=v.camera.position.clone(),distance=before.length();v.orbit(dx,dy);
+    assert.ok(Math.abs(v.camera.position.length()-distance)<1e-8);
+    if(dy)assert.equal(Math.sign(v.camera.position.y-before.y),Math.sign(dy));
+    v.orbit(-dx,-dy);assert.ok(v.camera.position.distanceTo(before)<1e-8);
   }
-  const v=make();for(let i=0;i<100;i++)v.orbit(13,40,'simple');assert.ok(v.camera.up.equals(new T.Vector3(0,1,0)));assert.ok(Math.abs(v.camera.position.y/v.camera.position.length())<1);
+  const v=make();v.orbit(0,400);assert.ok(v.camera.up.y<0,'camera may flip freely');
 });
 
 test('last-action descriptions use the indicated face as the rotation reference',()=>{

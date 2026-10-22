@@ -31,10 +31,7 @@
         </div><div class="lab-heading-actions"><label id="immersiveViewLabel" hidden>显示<select id="immersiveView"><option value="both">双视图</option><option value="three">仅左侧 · 三维</option><option value="flat">仅右侧 · 二维</option></select></label><button id="immersiveBtn" aria-pressed="false">沉浸体验</button><button id="helpBtn" class="text-button">操作说明</button></div>
       </div>
       <div class="lab-toolbar" data-ui>
-        <div class="toolbar-group"><label>模式<select id="modeSelect">
-              <option value="simple">简单</option>
-              <option value="advanced">进阶</option>
-            </select></label><label>阶数<select id="sizeSelect" aria-label="魔方阶数">
+        <div class="toolbar-group"><label>阶数<select id="sizeSelect" aria-label="魔方阶数">
               <option value="2">2 阶</option>
               <option value="3" selected>3 阶</option>
               <option value="4">4 阶</option>
@@ -77,14 +74,33 @@
             <details id="formulaExplanation" class="formula-explanation"><summary>识别与步骤详解</summary><p id="formulaRecognition"></p><ol id="formulaWalkthrough"></ol></details>
             <div class="player-controls"><button id="formulaPrev">上一步</button><button id="formulaPlay" class="lab-primary">播放</button><button id="formulaNext">下一步</button><label class="playback-rate">倍速<select id="formulaRate"><option value="0.25">0.25倍</option><option value="0.5">0.5倍</option><option value="0.75">0.75倍</option><option value="1" selected>1倍</option><option value="1.25">1.25倍</option><option value="1.5">1.5倍</option></select></label><button id="formulaFirst">回到第一步</button><button id="formulaReplay">重新播放</button><button id="formulaApply">应用到当前局面</button><span id="formulaProgress"></span></div>
           </section>
+          <section id="practicePanel" class="practice-panel" aria-label="练习计时与操作">
+            <div class="practice-panel-heading"><h3>操作面板</h3><button id="practiceToggle" aria-expanded="true" aria-controls="practiceBody">收起面板</button></div>
+            <div class="timer-controls" aria-label="练习计时"><output id="timerValue" aria-label="练习用时" aria-live="off">00:00.00</output><span id="timerState" role="status">未开始</span><div class="timer-actions"><button id="timerStart">开始计时</button><button id="timerPause" disabled>暂停</button><button id="timerEnd" disabled>结束计时</button></div></div>
+          <p id="lastAction" class="last-action" role="status" aria-live="polite" aria-atomic="true">上一步：尚未转动</p>
+            <div id="practiceBody">
           <div class="quick-controls"><button id="undoBtn">撤销</button><button id="redoBtn">重做</button>
             <div class="practice-status"><span>操作 <b id="moveCount">0</b></span><span id="solvedBadge" role="status">已还原</span></div>
           </div>
-          <p id="lastAction" class="last-action" role="status" aria-live="polite" aria-atomic="true">上一步：尚未转动</p>
           <div class="manual-controls" aria-label="选面与转动">
             <div class="face-controls" role="group" aria-label="选择外侧面"><span>面</span><button data-face="U">上 U</button><button data-face="D">下 D</button><button data-face="L">左 L</button><button data-face="R">右 R</button><button data-face="F">前 F</button><button data-face="B">后 B</button></div>
             <div class="turn-controls"><button id="ccwBtn">逆时针</button><button id="cwBtn">顺时针</button><button id="halfBtn">半圈</button></div>
           </div>
+
+<section class="layer-controls" data-ui aria-label="面与层控制">
+
+
+        <div id="advancedControls" class="advanced-controls"><label>轴<select id="axisSelect">
+              <option value="x">X 左右</option>
+              <option value="y" selected>Y 上下</option>
+              <option value="z">Z 前后</option>
+            </select></label><label class="check-label"><input id="wideMode" type="checkbox">多层模式</label><label>起始层<select id="layerStart"></select></label><label id="layerEndLabel" hidden>结束层<select id="layerEnd"></select></label><button id="exitWideBtn" hidden>退出多层</button>
+          <p id="rangeInfo">仅选层；转动仍需拖动或点击转动按钮。</p>
+          <p class="keyboard-help">W/S 上下选层，A/D 左右选层，Q/E 前后选层，R 切轴，Z/C 转动，数字选层。Ctrl/⌘ Z 撤销，Ctrl/⌘ Shift Z 重做。</p>
+        </div>
+      </section>
+            </div>
+          </section>
         </section>
         <section class="lab-panel diagram-panel" aria-labelledby="diagramTitle" data-ui>
           <div class="panel-heading">
@@ -98,18 +114,6 @@
         <div id="immersiveConsole" class="immersive-console" hidden></div>
       </div>
       <div id="selectionInfo" class="selection-info" role="status">拖动色块或彩点拧一层；拖动三维空白换视角。</div>
-      <section class="layer-controls" data-ui aria-label="面与层控制">
-
-
-        <div id="advancedControls" class="advanced-controls" hidden><label>轴<select id="axisSelect">
-              <option value="x">X 左右</option>
-              <option value="y" selected>Y 上下</option>
-              <option value="z">Z 前后</option>
-            </select></label><label class="check-label"><input id="wideMode" type="checkbox">多层模式</label><label>起始层<select id="layerStart"></select></label><label id="layerEndLabel" hidden>结束层<select id="layerEnd"></select></label><button id="exitWideBtn" hidden>退出多层</button>
-          <p id="rangeInfo">仅选层；转动仍需拖动或点击转动按钮。</p>
-          <p class="keyboard-help">W/S 上下选层，A/D 左右选层，Q/E 前后选层，R 切轴，Z/C 转动，数字选层。Ctrl/⌘ Z 撤销，Ctrl/⌘ Shift Z 重做。</p>
-        </div>
-      </section>
       <details id="historyPanel" class="history-panel">
         <summary>步骤记录 <span id="historyCount">0</span></summary>
         <div class="history-tools"><button id="historyPause" disabled>暂停回看</button><button id="historyJump" disabled>直接到此步</button><span id="historyNote"></span></div>
@@ -147,8 +151,9 @@
         <p>同一枚贴纸在三维、圆形轨道和十字展开中有固定对应。缩放圆形图，可辨认高阶密集的点。</p>
       </li>
       <li><strong>放心尝试</strong>
-        <p>撤销、重做与步骤记录帮助你退回；完成步骤自动保存在本机。进阶模式可选内层和连续多层。</p>
+        <p>撤销、重做与步骤记录帮助你退回；完成步骤自动保存在本机。可选内层和连续多层，操作面板可收起。</p>
       </li>
+      <li><strong>记录练习时间</strong><p>点击开始、暂停、继续或结束计时。刷新页面或进入公式示例后计时会暂停，可手动继续；新开一局会清零本局用时。</p></li>
     </ol><button id="startPlaying" class="lab-primary">开始转动</button>
   </dialog>
   <dialog id="confirmDialog" aria-labelledby="confirmTitle">

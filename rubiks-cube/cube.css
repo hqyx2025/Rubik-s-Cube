@@ -262,6 +262,69 @@ dialog .lab-primary:hover {
   margin-left: 5px
 }
 
+.practice-panel {
+  background: var(--soft);
+}
+
+.practice-panel-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 22px;
+}
+
+.practice-panel-heading h3 {
+  font-size: 18px;
+  margin: 0;
+}
+
+.timer-controls,
+.timer-actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.timer-controls {
+  padding: 0 22px 12px;
+  gap: 10px 16px;
+}
+
+#timerValue {
+  font-size: 26px;
+  line-height: 1.3;
+  font-variant-numeric: tabular-nums;
+}
+
+#timerState {
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.timer-actions button {
+  padding: 8px 12px;
+}
+
+.practice-panel .layer-controls {
+  padding: 0 22px 22px;
+}
+
+.practice-panel .advanced-controls {
+  margin: 0;
+  padding: 0;
+  background: none;
+  gap: 12px;
+}
+
+@media(max-width:640px) {
+  .practice-panel-heading {padding: 10px 16px;}
+  .timer-controls {padding: 0 16px 10px;}
+  .practice-panel .layer-controls {padding: 0 16px 18px;}
+  .timer-actions {gap: 6px;}
+}
+
 #solvedBadge {
   color: var(--muted)
 }

@@ -129,23 +129,14 @@ export class CubeView {
     this.camera.lookAt(0, 0, 0);
     this.draw();
   }
-  orbit(dx, dy, mode) {
-    const T = this.T;
-    if (mode === 'simple') {
-      const p = this.camera.position,
-        d = p.length(),
-        az = Math.atan2(p.x, p.z) - dx * .007,
-        polar = Math.max(.15, Math.min(Math.PI - .15, Math.acos(Math.max(-1, Math.min(1, p.y / d))) - dy * .007));
-      p.set(d * Math.sin(polar) * Math.sin(az), d * Math.cos(polar), d * Math.sin(polar) * Math.cos(az));
-      this.camera.up.set(0, 1, 0);
-    } else {
-      const right = new T.Vector3(1, 0, 0).applyQuaternion(this.camera.quaternion),
-        up = this.camera.up.clone().normalize(),
-        q = new T.Quaternion().setFromAxisAngle(up, -dx * .007).multiply(new T.Quaternion().setFromAxisAngle(right, -
-          dy * .007));
-      this.camera.position.applyQuaternion(q);
-      this.camera.up.applyQuaternion(q).normalize();
-    }
+  orbit(dx, dy) {
+    const T = this.T,
+      right = new T.Vector3(1, 0, 0).applyQuaternion(this.camera.quaternion),
+      up = this.camera.up.clone().normalize(),
+      q = new T.Quaternion().setFromAxisAngle(up, -dx * .007)
+        .multiply(new T.Quaternion().setFromAxisAngle(right, -dy * .007));
+    this.camera.position.applyQuaternion(q);
+    this.camera.up.applyQuaternion(q).normalize();
     this.camera.lookAt(0, 0, 0);
     this.draw();
   }
