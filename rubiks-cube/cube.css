@@ -780,6 +780,57 @@ dialog>p {
   padding: 8px 10px;
 }
 
+.formula-targets {
+  margin: 14px 0 18px;
+}
+
+.formula-targets p {
+  margin: 0 0 6px;
+  font-size: 14px;
+  line-height: 1.8;
+}
+
+.formula-targets #formulaTargetTitle {
+  font-size: 16px;
+}
+
+.formula-targets .target-key {
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.target-swatch {
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  margin-right: 6px;
+  vertical-align: -2px;
+  border: 3px double #fff2b0;
+  outline: 2px solid #193d33;
+  background: #193d33;
+}
+
+.target-halos,
+.target-net-inner {
+  pointer-events: none;
+}
+
+.diagram-stage .target-halo-outer {
+  stroke: #193d33;
+  stroke-width: 5;
+}
+
+.diagram-stage .target-halo-inner,
+.diagram-stage .target-net-inner {
+  stroke: #fff2b0;
+  stroke-width: 1.8;
+}
+
+#diagram .demo-target {
+  stroke: #193d33;
+  stroke-width: 3.5;
+}
+
 .formula-explanation {
   margin-bottom: 12px;
 }

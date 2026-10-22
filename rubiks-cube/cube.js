@@ -29,6 +29,7 @@ import {
 } from './views.js';
 import {mountCatalog} from './catalog.js';
 import {exampleFor, recognition, stepExplanation} from './curriculum.js';
+import {formulaTargets, targetProgress} from './targets.js';
 
 const $ = id => document.getElementById(id),
   storeKey = 'rubiks-lab-v2',
@@ -198,8 +199,14 @@ function laterSave() {
 }
 
 function frame() {
-  cube?.sync(state(), active, selected, selectedId);
-  flat.render(state(), active, selected, selectedId);
+  const ids = player?.targets?.stickerIds || [];
+  cube?.sync(state(), active, selected, selectedId, ids);
+  flat.render(state(), active, selected, selectedId, ids);
+  if (player?.targets) {
+    const progress=targetProgress(player.targets,state()),
+      text=active?'转动中 · 双框正在跟踪目标块':`${player.targets.rule==='orientation'?'朝向正确':'已归位'} ${progress.complete} / ${progress.total} 块${progress.complete===progress.total&&player.index===player.moves.length?' · 本条目标已完成':''}`;
+    if ($('formulaTargetProgress').textContent!==text) $('formulaTargetProgress').textContent=text;
+  }
   $('diagram').dataset.angle = String(active?.angle || 0);
 }
 
@@ -332,6 +339,8 @@ function playerUI() {
   $('exitDemo').disabled = !!player.transitioning;
   $('formulaApply').disabled = !!player.transitioning;
   $('formulaApply').hidden = !player.restore;
+  $('formulaTargetTitle').textContent = `目标：${player.targets.title}`;
+  $('formulaTargetNames').textContent = [...new Set(player.targets.groups.map(g=>g.label))].join('、');
   $('formulaProgress').textContent = `${player.index} / ${player.moves.length}`;
   const stepIndex = animating ? player.index - (player.direction<0?1:0) : Math.max(0,player.index-1),
     step = player.moves[stepIndex], token = player.steps?.[stepIndex]?.token || (step && moveName(step,size));
@@ -1089,6 +1098,7 @@ async function startDemo(formula) {
     ...formula,
     moves,
     steps,
+    targets: formulaTargets(formula, session.state, moves),
     index: 0,
     playing: false,
     initial: structuredClone(session.serialize()),
@@ -1273,6 +1283,7 @@ $('formulaApply').onclick = async () => {
     alg: p.alg,
     moves: p.moves,
     steps: p.steps,
+    targets: p.targets,
     index: 0,
     playing: false,
     initial: structuredClone(session.serialize()),
@@ -1425,7 +1436,13 @@ globalThis.cubeLab = Object.freeze({
       wide: $('wideMode').checked,
       selectedId,
       lastAction,
-      formulaRate
+      formulaRate,
+      demoTargets: player?.targets ? {
+        ...targetProgress(player.targets,state()),
+        rule:player.targets.rule,
+        stickerIds:[...player.targets.stickerIds],
+        threeIds:[...(cube?.targetMarks.keys() || [])]
+      } : null
     };
   },
   get input() {

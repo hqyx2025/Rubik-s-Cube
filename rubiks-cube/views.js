@@ -74,6 +74,21 @@ export class CubeView {
     this.stickerOutline.renderOrder = 10;
     this.scene.add(this.stickerOutline);
     this.stickerOutline.visible = false;
+    const ringGeometry = (outer,inner) => {
+      const shape=new T.Shape();
+      shape.moveTo(-outer,-outer);shape.lineTo(outer,-outer);shape.lineTo(outer,outer);shape.lineTo(-outer,outer);shape.closePath();
+      const hole=new T.Path();
+      hole.moveTo(-inner,-inner);hole.lineTo(-inner,inner);hole.lineTo(inner,inner);hole.lineTo(inner,-inner);hole.closePath();
+      shape.holes.push(hole);
+      return new T.ShapeGeometry(shape);
+    };
+    this.targetOuterGeo=ringGeometry(.478,.405);
+    this.targetInnerGeo=ringGeometry(.451,.431);
+    this.targetOuterMat=new T.MeshBasicMaterial({color:new T.Color('#193d33').convertSRGBToLinear()});
+    this.targetInnerMat=new T.MeshBasicMaterial({color:new T.Color('#fff2b0').convertSRGBToLinear()});
+    this.targetGroup=new T.Group();
+    this.scene.add(this.targetGroup);
+    this.targetMarks=new Map();
     this.raycaster = new T.Raycaster();
     this.observer = new ResizeObserver(() => this.resize());
     this.observer.observe(canvas.parentElement);
@@ -175,7 +190,7 @@ export class CubeView {
     this.base = state;
     this.activeKey = '';
   }
-  sync(state, active, selection, selectedId) {
+  sync(state, active, selection, selectedId, targets = []) {
     const next = active ? `${active.axis}/${active.lo}/${active.hi}` : '';
     if (this.base !== state || this.activeKey !== next) {
       this.build(state);
@@ -207,7 +222,24 @@ export class CubeView {
       this.stickerOutline.quaternion.setFromUnitVectors(new this.T.Vector3(0, 0, 1), new this.T.Vector3(...n));
       this.stickerOutline.material.color.set(['U', 'D'].includes(sticker.color) ? 0x193d33 : 0xf3f6f5);
     }
+    this.markTargets(state,active,targets);
     this.draw();
+  }
+  markTargets(state,active,ids) {
+    const wanted=new Set(ids),T=this.T;
+    for(const [id,mark] of this.targetMarks)if(!wanted.has(id)){this.targetGroup.remove(mark);this.targetMarks.delete(id);}
+    for(const t of state.stickers){
+      if(!wanted.has(t.id))continue;
+      let mark=this.targetMarks.get(t.id);
+      if(!mark){
+        mark=new T.Group();
+        const outer=new T.Mesh(this.targetOuterGeo,this.targetOuterMat),inner=new T.Mesh(this.targetInnerGeo,this.targetInnerMat);
+        inner.position.z=.001;mark.add(outer,inner);this.targetGroup.add(mark);this.targetMarks.set(t.id,mark);
+      }
+      const moving=active&&affects(t,active,state.size),p=moving?rotate(t.p,active.axis,active.angle):t.p,n=moving?rotate(t.n,active.axis,active.angle):t.n;
+      mark.position.set(...p.map((v,i)=>v/2-n[i]*.02));
+      mark.quaternion.setFromUnitVectors(new T.Vector3(0,0,1),new T.Vector3(...n));
+    }
   }
   draw() {
     if (this.camera && this.renderer) this.renderer.render(this.scene, this.camera);
@@ -331,7 +363,9 @@ export class FlatView {
     });
     this.tiles = svg('g');
     this.labels = svg('g');
-    this.world.append(this.paths, this.tiles, this.labels);
+    this.targetLayer=svg('g',{'class':'target-halos','aria-hidden':'true'});
+    this.targetMarks=new Map();
+    this.world.append(this.paths, this.tiles, this.targetLayer, this.labels);
     this.nodes = new Map();
     this.geo = projection(state.size);
     if (this.kind === 'net') {
@@ -413,12 +447,13 @@ export class FlatView {
       this.paths.append(path);
     }
   }
-  render(state, active, selection, selectedId) {
+  render(state, active, selection, selectedId, targets = []) {
     if (this.size !== state.size || this.lastKind !== this.kind) {
       this.create(state);
       this.lastKind = this.kind;
     }
     this.state = state;
+    this.targetIds=new Set(targets);
     this.selection = selection;
     const track = active || selection,
       cache = `${state.size}/${track?.axis}/${track?.lo}/${track?.hi}/${this.focusAxis}/${selectedId}`;
@@ -456,9 +491,20 @@ export class FlatView {
         node.setAttribute('cy', p[1]);
         for (const axis of AXES) node.setAttribute(`data-orbit-${axis}`, orbitKey(t, axis));
         node.setAttribute('class',
-          `${track&&affects(t,track,state.size)?'moving ':''}${selectedId===t.id?'picked':''}`);
+          `${track&&affects(t,track,state.size)?'moving ':''}${selectedId===t.id?'picked ':''}${this.targetIds.has(t.id)?'demo-target':''}`);
         node.querySelector('title').textContent =
           `${FACE[cellOf(t,state.size).face].name}面 第${cellOf(t,state.size).row+1}行 第${cellOf(t,state.size).col+1}列；X／Y／Z轴各有对应轨迹`;
+      }
+      for(const [id,mark] of this.targetMarks)if(!this.targetIds.has(id)){mark.remove();this.targetMarks.delete(id);}
+      for(const id of this.targetIds){
+        const dot=this.nodes.get(id);if(!dot)continue;
+        let mark=this.targetMarks.get(id);
+        if(!mark){
+          mark=svg('g',{'data-target-sticker':id});
+          mark.append(svg('circle',{'class':'target-halo-outer',fill:'none'}),svg('circle',{'class':'target-halo-inner',fill:'none'}));
+          this.targetLayer.append(mark);this.targetMarks.set(id,mark);
+        }
+        for(const ring of mark.children){ring.setAttribute('cx',dot.getAttribute('cx'));ring.setAttribute('cy',dot.getAttribute('cy'));ring.setAttribute('r',Number(dot.getAttribute('r'))+4);}
       }
     } else this.renderNet(state, active, selection, selectedId);
     this.applyTransform();
@@ -493,10 +539,15 @@ export class FlatView {
         rx: 2,
         fill: COLORS[t.color],
         'data-sticker': t.id,
-        'class': `${hot?'moving ':''}${selectedId===t.id?'picked':''}`
+        'class': `${hot?'moving ':''}${selectedId===t.id?'picked ':''}${this.targetIds.has(t.id)?'demo-target':''}`
       });
       if (angle) rect.setAttribute('transform', `rotate(${angle} ${p[0]} ${p[1]})`);
       groups[face].append(rect);
+      if(this.targetIds.has(t.id)){
+        const border=svg('rect',{x:p[0]-13.8,y:p[1]-13.8,width:27.6,height:27.6,rx:2,fill:'none','class':'target-net-inner','data-target-sticker':t.id});
+        if(angle)border.setAttribute('transform',`rotate(${angle} ${p[0]} ${p[1]})`);
+        groups[face].append(border);
+      }
     };
     const transferFaces = new Set();
     for (let i = 0; i < state.stickers.length; i++) {
