@@ -1,3 +1,5 @@
+import { preferences } from '../preferences.js';
+await preferences.ready;
 import {
   AXES,
   FACES,
@@ -62,7 +64,7 @@ const prefs = {
 };
 let savedRaw;
 try {
-  savedRaw = localStorage.getItem(storeKey);
+  savedRaw = preferences.getItem(storeKey);
   if (savedRaw) {
     const data = JSON.parse(savedRaw);
     session = CubeSession.restore(data.session);
@@ -174,10 +176,10 @@ function notice(text, actions = []) {
 }
 
 function save() {
-  if (saveBlocked) return false;
+  if (saveBlocked || !preferences.user) return false;
   const saved = player?.restore;
   try {
-    localStorage.setItem(storeKey, JSON.stringify({
+    preferences.setItem(storeKey, JSON.stringify({
       session: (saved?.session || session).serialize(),
       lastAction: saved?.lastAction || lastAction,
       formulaRate,
@@ -192,7 +194,7 @@ function save() {
     return true;
   } catch {
     saveBlocked = true;
-    notice('浏览器存储不可用，当前仍能玩，但这次进度无法自动保存。');
+    notice('账号存储暂不可用，当前仍能玩，但这次进度尚未保存。');
     return false;
   }
 }
@@ -1330,7 +1332,7 @@ for (const id of ['helpBtn', 'closeHelp', 'startPlaying']) $(id).onclick = async
   } else {
     $('helpDialog').close();
     try {
-      localStorage.setItem('rubiks-help-seen', '1');
+      preferences.setItem('rubiks-help-seen', '1');
     } catch {}
   }
 };
@@ -1408,33 +1410,34 @@ document.addEventListener('visibilitychange', () => {
     boundary().then(save);
   }
 });
-addEventListener('pagehide', save);
+addEventListener('pagehide', () => { save(); void preferences.flush({ keepalive: true }); });
+addEventListener('preferences-save-error', () => notice('进度暂未保存，请检查网络。当前仍可继续操作。'));
 new MutationObserver(() => cube?.draw()).observe(document.documentElement, {
   attributes: true,
   attributeFilter: ['data-theme']
 });
 if (saveBlocked && savedRaw) notice('找到的旧进度无法安全恢复。原记录暂时保留，当前可以体验新局，但不会覆盖旧记录。', [
   ['清除旧记录并保存新局', async () => {
-    if (await ask('清除本机旧进度？', '只清除此浏览器的魔方旧记录，不影响博客账号与文章。', '清除')) {
+    if (await ask('替换账号中的旧进度？', '只替换当前账号的魔方进度，不影响博客账号与文章。', '清除')) {
       saveBlocked = false;
       if (save()) $('savedNotice').hidden = true;
     }
   }]
 ]);
-else if (savedRaw) notice('已恢复本机保存的魔方与步骤。', [
+else if (savedRaw) notice('已恢复当前账号保存的魔方与步骤。', [
   ['收起', () => $('savedNotice').hidden = true]
 ]);
 else {
   let seen = false;
   try {
-    seen = localStorage.getItem('rubiks-help-seen') === '1';
+    seen = preferences.getItem('rubiks-help-seen') === '1';
   } catch {}
   if (!seen) notice('第一次来？拖色块或彩点试一试，操作说明随时可以打开。', [
     ['看看怎么转', () => $('helpDialog').showModal()],
     ['开始体验', () => {
       $('savedNotice').hidden = true;
       try {
-        localStorage.setItem('rubiks-help-seen', '1');
+        preferences.setItem('rubiks-help-seen', '1');
       } catch {}
     }]
   ]);

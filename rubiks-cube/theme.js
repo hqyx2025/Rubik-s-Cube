@@ -1,9 +1,9 @@
-// Share the blog's saved theme without depending on its single-page application.
-(() => {
+import { preferences } from '../preferences.js';
+await preferences.ready;
+document.getElementById('cubeAccount').textContent = preferences.user ? '我的账号' : '登录 / 注册';
+{
   const root = document.documentElement;
-  let theme;
-  try { theme = localStorage.getItem('blog-theme'); } catch {}
-  if (!['light', 'dark'].includes(theme)) theme = matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+  let theme = preferences.getItem('blog-theme') || 'light';
   const apply = () => {
     root.dataset.theme = theme;
     document.querySelector('meta[name="theme-color"]').content = theme === 'dark' ? '#111f19' : '#f3f6f5';
@@ -14,15 +14,9 @@
     }
   };
   apply();
-  addEventListener('DOMContentLoaded', () => {
-    apply();
-    document.getElementById('cubeTheme').addEventListener('click', () => {
+  document.getElementById('cubeTheme').addEventListener('click', () => {
       theme = theme === 'dark' ? 'light' : 'dark';
-      try { localStorage.setItem('blog-theme', theme); } catch {}
+      preferences.setItem('blog-theme', theme);
       apply();
-    });
   });
-  addEventListener('storage', event => {
-    if (event.key === 'blog-theme' && ['light', 'dark'].includes(event.newValue)) { theme = event.newValue; apply(); }
-  });
-})();
+}

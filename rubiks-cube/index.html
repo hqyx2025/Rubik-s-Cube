@@ -8,7 +8,7 @@
   <meta name="description" content="从圆形轨道到立体魔方，亲手探索2～7阶魔方的转层关系。">
   <meta name="theme-color" content="#f3f6f5">
   <link rel="icon" href="../mark.svg" type="image/svg+xml">
-  <script src="./theme.js"></script>
+  <script type="module" src="./theme.js"></script>
   <link rel="stylesheet" href="../style.css">
   <link rel="stylesheet" href="./cube.css">
   <script src="./vendor/three.min.js" defer></script>
@@ -21,7 +21,7 @@
   </noscript>
   <div class="lab-wrap">
     <header class="lab-header"><a class="lab-brand" href="https://hqyx.website/">花前月下</a>
-      <nav aria-label="作品导航"><a href="https://hqyx.website/projects?kind=experience">在线体验</a><a href="https://hqyx.website/projects/rubiks-cube">项目详情</a><button id="cubeTheme" type="button">入夜</button></nav>
+      <nav aria-label="作品导航"><a href="https://hqyx.website/projects?kind=experience">在线体验</a><a href="https://hqyx.website/projects/rubiks-cube">项目详情</a><a id="cubeAccount" href="https://hqyx.website/account?return=%2Frubiks-cube%2F">登录 / 注册</a><button id="cubeTheme" type="button">入夜</button></nav>
     </header>
     <main id="main">
       <div class="lab-heading">
@@ -46,7 +46,7 @@
             <option value="slow">慢速</option>
             <option value="off">关闭自动动画</option>
           </select></label><label>灵敏度 <output id="sensitivityValue">1.0 倍</output><input id="sensitivity" type="range" min="0.5" max="2" step="0.1" value="1"></label>
-        <p>设置保存在此浏览器。直接拖动始终跟手，关闭自动动画只影响松手和按钮转动。</p>
+        <p>登录后按账号保存设置；游客使用默认设置，离开后不保留。直接拖动始终跟手，关闭自动动画只影响松手和按钮转动。</p>
       </section>
       <div id="savedNotice" class="lab-notice" hidden role="status"></div>
       <div class="workbench">
@@ -151,7 +151,7 @@
         <p>同一枚贴纸在三维、圆形轨道和十字展开中有固定对应。缩放圆形图，可辨认高阶密集的点。</p>
       </li>
       <li><strong>放心尝试</strong>
-        <p>撤销、重做与步骤记录帮助你退回；完成步骤自动保存在本机。可选内层和连续多层，操作面板可收起。</p>
+        <p>撤销、重做与步骤记录帮助你退回；登录后自动保存步骤；游客进度仅用于本次体验。可选内层和连续多层，操作面板可收起。</p>
       </li>
       <li><strong>记录练习时间</strong><p>点击开始、暂停、继续或结束计时。刷新页面或进入公式示例后计时会暂停，可手动继续；新开一局会清零本局用时。</p></li>
     </ol><button id="startPlaying" class="lab-primary">开始转动</button>

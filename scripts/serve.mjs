@@ -11,6 +11,10 @@ const server = createServer(async (req, res) => {
   if (!['GET', 'HEAD'].includes(req.method)) { res.writeHead(405, {Allow:'GET, HEAD'}).end(); return; }
   try {
     const pathname = decodeURIComponent(new URL(req.url, 'http://localhost').pathname);
+    // Static previews are guests; account storage belongs to the hosted blog.
+    if (['/api/account/preferences','/api/account/session'].includes(pathname)) {
+      res.writeHead(200, {'Content-Type':'application/json', 'Cache-Control':'no-store'}).end(JSON.stringify({user:null,...(pathname.endsWith('preferences')?{values:{}}:{})})); return;
+    }
     let file = resolve(root, '.' + pathname);
     const rel = relative(root, file);
     if (rel.startsWith('..') || rel.split(sep).some(p => p.startsWith('.'))) {
